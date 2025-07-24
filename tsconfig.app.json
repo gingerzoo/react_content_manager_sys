@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "node", // 决定了在导入时如何查找文件
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+
+    "noEmit": true,
+    "jsx": "react-jsx",
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    // 补充配置
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true, // 允许从没有默认导出的模块中默认导入
+    "esModuleInterop": true, //  TypeScript 能像 ESModule 一样导入 CommonJS 模块
+    "isolatedModules": true, // 强制每个文件都作为单独的模块进行编译，以确保它可以被单独转换为 JavaScript，不依赖于项目中的其他文件。
+    // 配置路径别名
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["src"]
+}

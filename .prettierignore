@@ -1,0 +1,29 @@
+# 忽略构建输出
+build/
+dist/
+coverage/
+
+# 忽略依赖项
+node_modules/
+
+# 忽略锁文件和日志
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+*.log
+
+# 忽略版本控制文件
+.git
+.gitignore
+
+# 忽略配置或特定文件
+public/
+*.min.js
+*.bundle.js
+*.svg
+*.png
+*.jpg
+
+# 忽略格式化脚本文件或自定义例外
+scripts/
+**/vendor/
