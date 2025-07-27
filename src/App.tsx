@@ -1,36 +1,35 @@
-import { memo } from 'react';
+import { memo, Suspense } from 'react';
 import type { FC, ReactNode } from 'react';
-import { useActionState } from 'react';
 import { useAppSelector, useAppDispatch } from './hooks/hook';
 import { addCountAction } from './store/modules/main';
 import { useRoutes } from 'react-router-dom';
-import routes from './router/index';
+import { ConfigProvider } from 'antd';
+import localRoutes from './router/index'; // 静态路由
+import { mapMeunsToRoutes } from '@/utils/mapMenusToRoutes';
 
 interface Iprops {
-  children?: ReactNode;
+    children?: ReactNode;
 }
 
 const App: FC<Iprops> = props => {
-  const { count } = useAppSelector(state => ({
-    count: state.main.count
-  }));
-  const dispatch = useAppDispatch();
+    const { userMenus } = useAppSelector(state => ({
+        userMenus: state.login.userMenus
+    }));
+    const dispatch = useAppDispatch();
+    const dynamicRoutes = mapMeunsToRoutes(userMenus);
+    const appRoutes = [...dynamicRoutes, ...localRoutes];
 
-  const handleBtnClick = () => {
-    console.log('点我点我点我！！！！');
-    dispatch(addCountAction(2));
-  };
-
-  const appRoutes = useRoutes(routes);
-
-  return (
-    <div>
-      <div>App</div>
-      <span>count: {count}</span>
-      <button onClick={handleBtnClick}>点我加2</button>
-      <div>{appRoutes}</div>
-    </div>
-  );
+    return (
+        <ConfigProvider
+            theme={{
+                token: {
+                    colorPrimary: '#00b96b'
+                }
+            }}
+        >
+            <Suspense fallback={<div>Loading</div>}>{useRoutes(appRoutes)}</Suspense>
+        </ConfigProvider>
+    );
 };
 
 export default memo(App);

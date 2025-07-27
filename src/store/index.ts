@@ -1,11 +1,13 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { useSelector, useDispatch } from "react-redux";
-import mainSlice from "./modules/main";
+import { configureStore } from '@reduxjs/toolkit';
+import { useSelector, useDispatch } from 'react-redux';
+import mainSlice from './modules/main';
+import loginSlice from './modules/login';
 
 const store = configureStore({
-  reducer: {
-    main: mainSlice,
-  },
+    reducer: {
+        main: mainSlice,
+        login: loginSlice
+    }
 });
 
 // type TRootState = typeof(store.getState()) 这样写结果也是一样的
