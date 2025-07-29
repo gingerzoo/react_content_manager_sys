@@ -5,7 +5,7 @@ import AuthRouter from './authRouter/authRouter';
 import { useAppSelector } from '@/hooks/hook';
 
 // 使用懒加载
-const Main = React.lazy(() => import('@/pages/main/main'));
+const Main = React.lazy(() => import('@/pages/main/index'));
 const Login = React.lazy(() => import('@/pages/login/login'));
 
 // const { userMenus } = useAppSelector(state => ({
