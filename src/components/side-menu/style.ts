@@ -1,12 +1,25 @@
 import styled from 'styled-components';
 
 const SideMenuWrap = styled.div`
-    /* .ant-layout-sider {
-        flex: 0 0 250px;
-        max-width: 250px;
-        min-width: 250px;
-        width: 250px;
-    } */
+    .menu-title {
+        display: flex;
+        align-items: center;
+        /* height: 40px; */
+        /* padding: 10px; */
+
+        padding: 15px 8px 10px 24px;
+        color: white;
+        overflow: hidden;
+
+        .menu-img {
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .title-text {
+            font-size: 16px;
+        }
+    }
 `;
 
 export default SideMenuWrap;

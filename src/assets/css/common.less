@@ -1,0 +1,21 @@
+body {
+    font-size: 14px;
+    font-family:
+        'Circular', 'PingFang-SC', 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei', 'Heiti SC';
+    background: #f5f5f5;
+    line-height: 1.15;
+}
+
+.clear-fix ::after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+.wrapno {
+    /* 不换行且多余部分用省略号表示！这一套组合拳 */
+    white-space: nowrap;
+    word-wrap: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

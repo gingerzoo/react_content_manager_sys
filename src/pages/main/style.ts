@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const MainWrap = styled.div`
-    .ant-layout {
+    .ant-layout-has-sider {
         height: 100vh;
 
         .ant-layout-sider {

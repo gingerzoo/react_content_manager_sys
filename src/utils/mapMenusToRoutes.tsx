@@ -1,7 +1,13 @@
 import React from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
+
+interface Ibreadcrumb {
+    title: string;
+    href: string;
+}
 const Main = React.lazy(() => import('@/pages/main/index'));
+
 export function loadLocalRoutes(): RouteObject[] {
     // eager: true 的作用是一次性同步加载所有模块
     const modules = import.meta.glob('../router/main/**/*.tsx', { eager: true });
@@ -68,4 +74,27 @@ export function flatterMenuMap(userMenus: any[]) {
         }
     });
     return map;
+}
+
+// 将动态路由映射到面包屑
+export function mapRouteToBreadCrumb(curPath: string, userMenus: any) {
+    const breadcrumb: Ibreadcrumb[] = [];
+    for (const menu of userMenus) {
+        for (const subMenu of menu.children) {
+            if (subMenu.url === curPath) {
+                // 先存储上一级路由
+                breadcrumb.push({
+                    title: menu.name,
+                    href: menu.url
+                });
+                breadcrumb.push({
+                    title: subMenu.name,
+                    href: subMenu.url
+                });
+
+                return breadcrumb;
+            }
+        }
+    }
+    return breadcrumb;
 }

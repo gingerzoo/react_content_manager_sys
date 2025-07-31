@@ -1,0 +1,68 @@
+body {
+  font-size: 14px;
+  font-family: 'Circular', 'PingFang-SC', 'Hiragino Sans GB', '微软雅黑', 'Microsoft YaHei', 'Heiti SC';
+  background: #f5f5f5;
+  line-height: 1.15;
+}
+.clear-fix ::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+.wrapno {
+  /* 不换行且多余部分用省略号表示！这一套组合拳 */
+  white-space: nowrap;
+  word-wrap: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body,
+button,
+dd,
+dl,
+dt,
+fieldset,
+form,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+input,
+li,
+ol,
+p,
+pre,
+td,
+textarea,
+th,
+ul {
+  padding: 0;
+  margin: 0;
+}
+a {
+  color: #666;
+  font-size: 12px;
+  text-decoration: none;
+}
+a:hover {
+  color: #666;
+  text-decoration: underline;
+}
+img {
+  vertical-align: top;
+}
+ul,
+li {
+  line-height: none;
+  list-style: none;
+}
+button {
+  border: none;
+}
+::selection {
+  color: black;
+  background: transparent;
+}

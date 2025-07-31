@@ -2,6 +2,7 @@ import React, { Children, memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
+
 import {
     LaptopOutlined,
     SettingOutlined,
@@ -12,6 +13,7 @@ import SideMenuWrap from './style';
 import { useAppSelector } from '@/hooks/hook';
 import { flatterMenuMap } from '@/utils/mapMenusToRoutes';
 import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/img/logo.svg';
 
 const iconList = [
     <LaptopOutlined />,
@@ -22,6 +24,7 @@ const iconList = [
 
 interface Iprops {
     children?: ReactNode;
+    isCollapsed: Boolean;
 }
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -30,6 +33,7 @@ const SideMenu: FC<Iprops> = props => {
     const { userMenus } = useAppSelector(state => ({
         userMenus: state.login.userMenus
     }));
+    const { isCollapsed } = props;
     const navigate = useNavigate();
     const menuItems: MenuItem[] = userMenus.map((menu, idx) => {
         const children = menu.children.map(subMenu => {
@@ -60,7 +64,10 @@ const SideMenu: FC<Iprops> = props => {
     };
     return (
         <SideMenuWrap>
-            {' '}
+            <div className='menu-title'>
+                <img src={logo} className='menu-img' />
+                {!isCollapsed && <span className='title-text'>贝卡管理系统</span>}
+            </div>
             <Menu
                 onClick={handleMenuItemClick}
                 defaultSelectedKeys={['4']}
