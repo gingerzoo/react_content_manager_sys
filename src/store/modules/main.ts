@@ -1,22 +1,22 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 interface Istate {
-  count: number;
+    selectedKeys: string[];
 }
-const initialState = {
-  count: 1,
+const initialState: Istate = {
+    selectedKeys: []
 };
 
 const homeSlice = createSlice({
-  name: "homeSlice",
-  initialState,
-  reducers: {
-    addCountAction(state, { payload }) {
-      state.count += payload;
-    },
-  },
+    name: 'homeSlice',
+    initialState,
+    reducers: {
+        changeSelectedKeys(state, { payload }) {
+            state.selectedKeys = payload;
+        }
+    }
 });
 
-export const { addCountAction } = homeSlice.actions;
+export const { changeSelectedKeys } = homeSlice.actions;
 
 export default homeSlice.reducer;

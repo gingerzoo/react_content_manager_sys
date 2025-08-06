@@ -1,4 +1,4 @@
-import React, { Children, memo } from 'react';
+import React, { Children, memo, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
@@ -10,10 +10,11 @@ import {
     ShoppingOutlined
 } from '@ant-design/icons';
 import SideMenuWrap from './style';
-import { useAppSelector } from '@/hooks/hook';
-import { flatterMenuMap } from '@/utils/mapMenusToRoutes';
-import { useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '@/hooks/hook';
+import { flatterMenuMap, mapPathToMenu } from '@/utils/mapMenusToRoutes';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '@/assets/img/logo.svg';
+import { changeSelectedKeys } from '@/store/modules/main';
 
 const iconList = [
     <LaptopOutlined />,
@@ -30,11 +31,31 @@ interface Iprops {
 type MenuItem = Required<MenuProps>['items'][number];
 
 const SideMenu: FC<Iprops> = props => {
-    const { userMenus } = useAppSelector(state => ({
-        userMenus: state.login.userMenus
+    const { userMenus, selectedKeys } = useAppSelector(state => ({
+        userMenus: state.login.userMenus,
+        selectedKeys: state.main.selectedKeys
     }));
     const { isCollapsed } = props;
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const location = useLocation();
+
+    const [openKeys, setOpenKeys] = useState<string[]>([]);
+
+    // 只会执行一次
+    // const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
+
+    useEffect(() => {
+        console.log('useEffect----');
+        const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
+        if (defaultSelectedKeys) {
+            console.log('难道没进来------');
+
+            dispatch(changeSelectedKeys(defaultSelectedKeys));
+            setOpenKeys([defaultSelectedKeys[1]]);
+        }
+    }, [location.pathname, userMenus]);
+
     const menuItems: MenuItem[] = userMenus.map((menu, idx) => {
         const children = menu.children.map(subMenu => {
             return {
@@ -53,8 +74,9 @@ const SideMenu: FC<Iprops> = props => {
     });
 
     const handleMenuItemClick: MenuProps['onClick'] = e => {
-        console.log('click ', e);
+        console.log('click ', e.keyPath);
         const key = +e.key;
+        dispatch(changeSelectedKeys(e.keyPath));
 
         const keyMapRoute = flatterMenuMap(userMenus);
         console.log('映射结果------------', keyMapRoute.get(key));
@@ -62,6 +84,11 @@ const SideMenu: FC<Iprops> = props => {
 
         /// 要映射路由啦
     };
+
+    const handleOpenChange = (keys: string[]) => {
+        setOpenKeys(keys);
+    };
+
     return (
         <SideMenuWrap>
             <div className='menu-title'>
@@ -70,8 +97,10 @@ const SideMenu: FC<Iprops> = props => {
             </div>
             <Menu
                 onClick={handleMenuItemClick}
-                defaultSelectedKeys={['4']}
-                defaultOpenKeys={['1']}
+                // defaultOpenKeys={[defaultSelectedKeys[1]]}
+                selectedKeys={selectedKeys}
+                openKeys={openKeys}
+                onOpenChange={handleOpenChange}
                 mode='inline'
                 theme='dark'
                 items={menuItems}

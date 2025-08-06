@@ -1,7 +1,6 @@
 import { memo, Suspense, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
 import { useAppSelector, useAppDispatch } from './hooks/hook';
-import { addCountAction } from './store/modules/main';
 import { useRoutes } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import localRoutes from './router/index'; // 静态路由

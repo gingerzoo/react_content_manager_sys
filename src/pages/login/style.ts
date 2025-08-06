@@ -11,6 +11,7 @@ const LoginWrap = styled.div`
         display: flex;
         flex-direction: column;
         justify-content: center;
+        margin-top: 10px;
         border: 1px solid #dcdfe6;
         /* background: red; */
 

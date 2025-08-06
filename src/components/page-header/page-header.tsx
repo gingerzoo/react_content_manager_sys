@@ -4,8 +4,9 @@ import { Button, Layout, Breadcrumb, theme } from 'antd';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import PageHeaderWrap from './style';
 import { mapRouteToBreadCrumb } from '@/utils/mapMenusToRoutes';
-import { useLocation } from 'react-router-dom';
-import { useAppSelector } from '@/hooks/hook';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/hooks/hook';
+import { changeSelectedKeys } from '@/store/modules/main';
 
 interface Iprops {
     children?: ReactNode;
@@ -14,17 +15,31 @@ interface Iprops {
 }
 
 const PageHeader: FC<Iprops> = props => {
-    const { userMenus } = useAppSelector(state => ({
-        userMenus: state.login.userMenus
+    const { userMenus, selectedKeys } = useAppSelector(state => ({
+        userMenus: state.login.userMenus,
+        selectedKeys: state.main.selectedKeys
     }));
     const { isCollapsed, onCallapsedChange } = props;
     const { Header } = Layout;
     const loaction = useLocation();
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const [selectedIds, setSelectedIds] = useState<string[]>(selectedKeys);
 
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken();
-    const breadcrumb = mapRouteToBreadCrumb(loaction.pathname, userMenus);
+    const handleCrumbItemClick = data => {
+        if (!data.href) {
+            return;
+        }
+        const parenId = data.id;
+        const childId = data.childId;
+        localStorage.setItem('selectedKeys', JSON.stringify([childId, parenId]));
+        dispatch(changeSelectedKeys([childId, parenId]));
+        // navigate(data.href);
+    };
+    const breadcrumb = mapRouteToBreadCrumb(loaction.pathname, userMenus, handleCrumbItemClick);
     return (
         <PageHeaderWrap>
             <Header style={{ background: colorBgContainer }}>
@@ -38,7 +53,11 @@ const PageHeader: FC<Iprops> = props => {
                         height: 64
                     }}
                 />
-                <Breadcrumb items={breadcrumb} />
+                <Breadcrumb
+                    items={breadcrumb.map(item => ({
+                        title: <span onClick={() => handleCrumbItemClick(item)}>{item.title}</span>
+                    }))}
+                />
             </Header>
         </PageHeaderWrap>
     );

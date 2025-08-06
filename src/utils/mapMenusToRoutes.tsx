@@ -1,10 +1,14 @@
 import React from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
+import AuthRouter from '@/router/authRouter/authRouter';
 
 interface Ibreadcrumb {
     title: string;
-    href: string;
+    href?: string;
+    id?: string;
+    childId?: string;
+    onClick?: () => void;
 }
 const Main = React.lazy(() => import('@/pages/main/index'));
 
@@ -21,6 +25,17 @@ export function loadLocalRoutes(): RouteObject[] {
 export function mapMeunsToRoutes(userMenus: any[]) {
     const localRoutes = loadLocalRoutes();
     const childrenRoutes: RouteObject[] = [];
+    let firstPath = '';
+
+    if (userMenus.length && userMenus[0].children.length) {
+        const firstChildPath = userMenus[0].children[0].url.replace('/main/', '');
+
+        // 在 childrenRoutes 前面加一个重定向
+        childrenRoutes.push({
+            path: '', // 等同于 path: ''
+            element: <Navigate to={firstChildPath} replace />
+        });
+    }
 
     userMenus.forEach(menu => {
         // menu.children.forEach(subMenu => {
@@ -56,7 +71,12 @@ export function mapMeunsToRoutes(userMenus: any[]) {
     return [
         {
             path: '/main',
-            element: <Main />,
+
+            element: (
+                <AuthRouter>
+                    <Main />
+                </AuthRouter>
+            ),
             children: childrenRoutes
         }
     ];
@@ -77,7 +97,11 @@ export function flatterMenuMap(userMenus: any[]) {
 }
 
 // 将动态路由映射到面包屑
-export function mapRouteToBreadCrumb(curPath: string, userMenus: any) {
+export function mapRouteToBreadCrumb(
+    curPath: string,
+    userMenus: any,
+    onCrumbItemClick: (id: any) => void
+) {
     const breadcrumb: Ibreadcrumb[] = [];
     for (const menu of userMenus) {
         for (const subMenu of menu.children) {
@@ -85,11 +109,15 @@ export function mapRouteToBreadCrumb(curPath: string, userMenus: any) {
                 // 先存储上一级路由
                 breadcrumb.push({
                     title: menu.name,
-                    href: menu.url
+                    href: menu.url,
+                    id: menu.id + '',
+                    childId: menu.children[0].id + ''
+                    // onClick: () => {
+                    //     onCrumbItemClick(menu);
+                    // }
                 });
                 breadcrumb.push({
-                    title: subMenu.name,
-                    href: subMenu.url
+                    title: subMenu.name
                 });
 
                 return breadcrumb;
@@ -97,4 +125,16 @@ export function mapRouteToBreadCrumb(curPath: string, userMenus: any) {
         }
     }
     return breadcrumb;
+}
+
+// 通过路由拿到菜单对应的id
+export function mapPathToMenu(path, userMenus: any[]) {
+    for (const menu of userMenus) {
+        for (const subMenu of menu.children) {
+            if (subMenu.url === path) {
+                return [subMenu.id + '', menu.id + ''];
+            }
+        }
+    }
+    return [];
 }

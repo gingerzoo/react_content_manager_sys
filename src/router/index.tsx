@@ -21,14 +21,6 @@ const localRoutes: RouteObject[] = [
         element: <Navigate to='/main' />
     },
     {
-        path: '/main',
-        element: (
-            <AuthRouter>
-                <Main />
-            </AuthRouter>
-        )
-    },
-    {
         path: '/login',
         element: <Login />
     }

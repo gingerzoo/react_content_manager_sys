@@ -75,8 +75,9 @@ const Login: FC<Iprops> = props => {
 
             localStorage.setItem('username', values?.name || '');
             console.log('点击登录时是否记住密码-------', isPsdRemembered);
-            dispatch(fetchLoginAction(values));
-            navigate('/main');
+            dispatch(fetchLoginAction(values)).then(() => {
+                navigate('/main');
+            });
 
             if (isPsdRemembered) {
                 localStorage.setItem('password', values?.password || '');
