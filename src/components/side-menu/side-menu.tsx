@@ -1,4 +1,4 @@
-import React, { Children, memo, useState, useEffect } from 'react';
+import React, { Children, memo, useState, useEffect, useMemo, useCallback } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
@@ -15,6 +15,7 @@ import { flatterMenuMap, mapPathToMenu } from '@/utils/mapMenusToRoutes';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '@/assets/img/logo.svg';
 import { changeSelectedKeys } from '@/store/modules/main';
+import { shallowEqual } from 'react-redux';
 
 const iconList = [
     <LaptopOutlined />,
@@ -34,7 +35,7 @@ const SideMenu: FC<Iprops> = props => {
     const { userMenus, selectedKeys } = useAppSelector(state => ({
         userMenus: state.login.userMenus,
         selectedKeys: state.main.selectedKeys
-    }));
+    }), shallowEqual);
     const { isCollapsed } = props;
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
@@ -42,52 +43,55 @@ const SideMenu: FC<Iprops> = props => {
 
     const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-    // 只会执行一次
-    // const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
+     // 缓存 keyMapRoute 结果
+     const keyMapRoute = useMemo(() => flatterMenuMap(userMenus), [userMenus]);
+
 
     useEffect(() => {
-        console.log('useEffect----');
         const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
         if (defaultSelectedKeys) {
-            console.log('难道没进来------');
 
             dispatch(changeSelectedKeys(defaultSelectedKeys));
             setOpenKeys([defaultSelectedKeys[1]]);
         }
-    }, [location.pathname, userMenus]);
+    }, [location.pathname, userMenus, dispatch]);
 
-    const menuItems: MenuItem[] = userMenus.map((menu, idx) => {
-        const children = menu.children.map(subMenu => {
+    // 监听selectedKeys变化
+    useEffect(() => {
+        if(selectedKeys && selectedKeys.length) {
+            const key = +selectedKeys[0];
+            const route = keyMapRoute.get(key);
+            route && navigate(route);
+        }
+    }, [selectedKeys, keyMapRoute, dispatch]);
+
+    // 优化点： 使用useMemo包裹这个menuItems
+    const menuItems: MenuItem[] = useMemo(() => {
+        return userMenus.map((menu, idx) => {
+            const children = menu.children.map(subMenu => {
+                return {
+                    key: subMenu.id + '',
+                    label: subMenu.name,
+                    url: subMenu.url
+                };
+            });
             return {
-                key: subMenu.id + '',
-                label: subMenu.name,
-                url: subMenu.url
+                key: menu.id + '',
+                label: menu.name,
+                icon: iconList[idx],
+                url: menu.url,
+                children
             };
         });
-        return {
-            key: menu.id + '',
-            label: menu.name,
-            icon: iconList[idx],
-            url: menu.url,
-            children
-        };
-    });
+    }, [userMenus]);
 
-    const handleMenuItemClick: MenuProps['onClick'] = e => {
-        console.log('click ', e.keyPath);
-        const key = +e.key;
+    const handleMenuItemClick: MenuProps['onClick'] = useCallback(e => {
         dispatch(changeSelectedKeys(e.keyPath));
+    }, [dispatch])
 
-        const keyMapRoute = flatterMenuMap(userMenus);
-        console.log('映射结果------------', keyMapRoute.get(key));
-        navigate(keyMapRoute.get(key));
-
-        /// 要映射路由啦
-    };
-
-    const handleOpenChange = (keys: string[]) => {
+    const handleOpenChange = useCallback((keys: string[]) => {
         setOpenKeys(keys);
-    };
+    }, []);
 
     return (
         <SideMenuWrap>

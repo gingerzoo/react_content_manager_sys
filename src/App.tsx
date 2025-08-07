@@ -6,6 +6,7 @@ import { ConfigProvider } from 'antd';
 import localRoutes from './router/index'; // 静态路由
 import { mapMeunsToRoutes } from '@/utils/mapMenusToRoutes';
 import type { RouteObject } from 'react-router-dom';
+import { shallowEqual } from 'react-redux';
 
 interface Iprops {
     children?: ReactNode;
@@ -14,7 +15,7 @@ interface Iprops {
 const App: FC<Iprops> = props => {
     const { userMenus } = useAppSelector(state => ({
         userMenus: state.login.userMenus
-    }));
+    }), shallowEqual);
     const dispatch = useAppDispatch();
     const [appRoutes, setAppRoutes] = useState<RouteObject[]>([]);
 
