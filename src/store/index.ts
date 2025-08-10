@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useSelector, useDispatch } from 'react-redux';
-import mainSlice from './modules/main';
+import mainSlice from './modules/main/main';
 import loginSlice from './modules/login';
+import systemSlice from './modules/main/system/system';
 
 const store = configureStore({
     reducer: {
         main: mainSlice,
-        login: loginSlice
+        login: loginSlice,
+        system: systemSlice
     }
 });
 

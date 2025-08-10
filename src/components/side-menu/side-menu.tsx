@@ -14,7 +14,7 @@ import { useAppSelector, useAppDispatch } from '@/hooks/hook';
 import { flatterMenuMap, mapPathToMenu } from '@/utils/mapMenusToRoutes';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '@/assets/img/logo.svg';
-import { changeSelectedKeys } from '@/store/modules/main';
+import { changeSelectedKeysAction } from '@/store/modules/main/main';
 import { shallowEqual } from 'react-redux';
 
 const iconList = [
@@ -32,10 +32,13 @@ interface Iprops {
 type MenuItem = Required<MenuProps>['items'][number];
 
 const SideMenu: FC<Iprops> = props => {
-    const { userMenus, selectedKeys } = useAppSelector(state => ({
-        userMenus: state.login.userMenus,
-        selectedKeys: state.main.selectedKeys
-    }), shallowEqual);
+    const { userMenus, selectedKeys } = useAppSelector(
+        state => ({
+            userMenus: state.login.userMenus,
+            selectedKeys: state.main.selectedKeys
+        }),
+        shallowEqual
+    );
     const { isCollapsed } = props;
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
@@ -43,22 +46,20 @@ const SideMenu: FC<Iprops> = props => {
 
     const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-     // 缓存 keyMapRoute 结果
-     const keyMapRoute = useMemo(() => flatterMenuMap(userMenus), [userMenus]);
-
+    // 缓存 keyMapRoute 结果
+    const keyMapRoute = useMemo(() => flatterMenuMap(userMenus), [userMenus]);
 
     useEffect(() => {
         const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
         if (defaultSelectedKeys) {
-
-            dispatch(changeSelectedKeys(defaultSelectedKeys));
+            dispatch(changeSelectedKeysAction(defaultSelectedKeys));
             setOpenKeys([defaultSelectedKeys[1]]);
         }
     }, [location.pathname, userMenus, dispatch]);
 
     // 监听selectedKeys变化
     useEffect(() => {
-        if(selectedKeys && selectedKeys.length) {
+        if (selectedKeys && selectedKeys.length) {
             const key = +selectedKeys[0];
             const route = keyMapRoute.get(key);
             route && navigate(route);
@@ -85,9 +86,12 @@ const SideMenu: FC<Iprops> = props => {
         });
     }, [userMenus]);
 
-    const handleMenuItemClick: MenuProps['onClick'] = useCallback(e => {
-        dispatch(changeSelectedKeys(e.keyPath));
-    }, [dispatch])
+    const handleMenuItemClick: MenuProps['onClick'] = useCallback(
+        e => {
+            dispatch(changeSelectedKeysAction(e.keyPath));
+        },
+        [dispatch]
+    );
 
     const handleOpenChange = useCallback((keys: string[]) => {
         setOpenKeys(keys);

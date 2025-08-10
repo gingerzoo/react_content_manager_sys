@@ -1,11 +1,12 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
-import { useAppSelector } from '@/hooks/hook';
+import { useAppDispatch, useAppSelector } from '@/hooks/hook';
 import { Layout, theme } from 'antd';
 import MainWrap from './style';
 import SideMenu from '@/components/side-menu/side-menu';
 import PageHeader from '@/components/page-header/page-header';
 import { Outlet } from 'react-router-dom';
+import { fetchPageEntriesAction } from '@/store/modules/main/main';
 
 interface Iprops {
     children?: ReactNode;
@@ -14,9 +15,13 @@ interface Iprops {
 const Main: FC<Iprops> = props => {
     const { Sider, Content } = Layout;
     const [collapsed, setCollapsed] = useState(false);
-    const {
-        token: { colorBgContainer, borderRadiusLG }
-    } = theme.useToken();
+    const dispatch = useAppDispatch();
+    useEffect(() => {
+        dispatch(fetchPageEntriesAction());
+    }, [dispatch]);
+    // const {
+    //     token: { colorBgContainer, borderRadiusLG }
+    // } = theme.useToken();
     const userMenus = JSON.parse(localStorage.getItem('userMenus') ?? '[]');
 
     const handleCollapsedBtnClick = () => {
@@ -29,7 +34,7 @@ const Main: FC<Iprops> = props => {
                     <div className='demo-logo-vertical' />
                     <SideMenu isCollapsed={collapsed} />
                 </Sider>
-                <Layout>
+                <Layout style={{ display: 'flex', flexDirection: 'column' }}>
                     <PageHeader
                         isCollapsed={collapsed}
                         onCallapsedChange={handleCollapsedBtnClick}
@@ -37,11 +42,9 @@ const Main: FC<Iprops> = props => {
 
                     <Content
                         style={{
-                            margin: '24px 16px',
-                            padding: 24,
-                            minHeight: 280,
-                            background: colorBgContainer,
-                            borderRadius: borderRadiusLG
+                            margin: '24px',
+                            flex: 1,
+                            overflow: 'auto'
                         }}
                     >
                         <Outlet />

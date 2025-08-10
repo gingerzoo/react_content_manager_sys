@@ -4,9 +4,6 @@ const SideMenuWrap = styled.div`
     .menu-title {
         display: flex;
         align-items: center;
-        /* height: 40px; */
-        /* padding: 10px; */
-
         padding: 15px 8px 10px 24px;
         color: white;
         overflow: hidden;

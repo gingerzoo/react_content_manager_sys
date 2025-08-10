@@ -6,8 +6,9 @@ import PageHeaderWrap from './style';
 import { mapRouteToBreadCrumb } from '@/utils/mapMenusToRoutes';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
-import { changeSelectedKeys } from '@/store/modules/main';
+import { changeSelectedKeysAction } from '@/store/modules/main/main';
 import { shallowEqual } from 'react-redux';
+import HeaderInfo from './c-cpns/header-info/header-info';
 
 interface Iprops {
     children?: ReactNode;
@@ -16,34 +17,38 @@ interface Iprops {
 }
 
 const PageHeader: FC<Iprops> = props => {
-    const { userMenus, selectedKeys } = useAppSelector(state => ({
-        userMenus: state.login.userMenus,
-        selectedKeys: state.main.selectedKeys
-    }), shallowEqual);
+    const { userMenus, selectedKeys } = useAppSelector(
+        state => ({
+            userMenus: state.login.userMenus,
+            selectedKeys: state.main.selectedKeys
+        }),
+        shallowEqual
+    );
     const { isCollapsed, onCallapsedChange } = props;
-    const { Header } = Layout;
     const loaction = useLocation();
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
 
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken();
 
     // 优化
-    const handleCrumbItemClick = useCallback(data => {
-        if (!data.href) {
-            return;
-        }
-        const parenId = data.id;
-        const childId = data.childId;
-        // localStorage.setItem('selectedKeys', JSON.stringify([childId, parenId]));
-        dispatch(changeSelectedKeys([childId, parenId]));
-    }, [dispatch]);
+    const handleCrumbItemClick = useCallback(
+        data => {
+            if (!data.href) {
+                return;
+            }
+            const parenId = data.id;
+            const childId = data.childId;
+            // localStorage.setItem('selectedKeys', JSON.stringify([childId, parenId]));
+            dispatch(changeSelectedKeysAction([childId, parenId]));
+        },
+        [dispatch]
+    );
     const breadcrumb = mapRouteToBreadCrumb(loaction.pathname, userMenus, handleCrumbItemClick);
     return (
-        <PageHeaderWrap>
-            <Header style={{ background: colorBgContainer }}>
+        <PageHeaderWrap $headerBgColor={colorBgContainer}>
+            <div className='header-left'>
                 <Button
                     type='text'
                     icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -54,14 +59,13 @@ const PageHeader: FC<Iprops> = props => {
                         height: 64
                     }}
                 />
-                {
-                    breadcrumb.length > 0 && (<Breadcrumb
-                        items={breadcrumb.map(item => ({
-                            title: <span onClick={() => handleCrumbItemClick(item)}>{item.title}</span>
-                        }))}
-                    />)
-                }
-            </Header>
+                <Breadcrumb
+                    items={breadcrumb.map(item => ({
+                        title: <span onClick={() => handleCrumbItemClick(item)}>{item.title}</span>
+                    }))}
+                />
+            </div>
+            <HeaderInfo />
         </PageHeaderWrap>
     );
 };
