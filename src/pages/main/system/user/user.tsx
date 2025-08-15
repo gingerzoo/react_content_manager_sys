@@ -6,25 +6,15 @@ import PageModal from '@/components/page-modal/page-modal';
 import searchConfig from './config/search.config';
 import contentConfig from './config/content.config';
 import modalConfig from './config/modal.config';
+import { usePageModal } from '@/hooks/hook';
 
 interface Iprops {
     children?: ReactNode;
 }
 
 const User: FC<Iprops> = props => {
-    // 控制Modal的开关
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const handleModalOpen = (record?: any) => {
-        setEditData(record || null);
-        setIsModalOpen(true);
-    };
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        setEditData(null);
-    };
-
-    // 编辑数据
-    const [editData, setEditData] = useState(null);
+    const { isModalOpen, editData, isEditState, handleModalOpen, handleModalClose } =
+        usePageModal();
 
     return (
         <div>
@@ -34,6 +24,7 @@ const User: FC<Iprops> = props => {
                 modalConfig={modalConfig}
                 isModalOpen={isModalOpen}
                 editData={editData}
+                isEditState={isEditState}
                 handleModalClose={handleModalClose}
             />
         </div>

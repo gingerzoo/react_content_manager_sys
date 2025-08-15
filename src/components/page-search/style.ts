@@ -22,7 +22,7 @@ const PageSearchWrap = styled.div<IPageSearch>`
     .btns {
         display: flex;
         justify-content: end;
-        margin-top: -15px;
+        margin-top: -5px;
 
         .ensure-btn {
             margin-left: 15px;

@@ -2,8 +2,9 @@ import React, { Children, memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { ISearchConfig } from '@/types/index';
 import { Button, Form, Input, Select, DatePicker, theme } from 'antd';
-import searchConfig from '@/pages/main/system/user/config/search.config';
 import PageSearchWrap from './style';
+import { fetchPageListAction } from '@/store/modules/main/system/system';
+import { useAppDispatch } from '@/hooks/hook';
 
 interface Iprops {
     children?: ReactNode;
@@ -13,6 +14,7 @@ interface Iprops {
 const { RangePicker } = DatePicker;
 
 const PageSearch: FC<Iprops> = props => {
+    const { searchConfig } = props;
     const [form] = Form.useForm();
 
     const renderFormItem = (item: ISearchConfig['formItems'][number]) => {
@@ -22,7 +24,7 @@ const PageSearch: FC<Iprops> = props => {
             return <RangePicker />;
         } else if (item.type === 'select') {
             return (
-                <Select>
+                <Select placeholder={item.placeholder}>
                     {item.options &&
                         item.options.map(option => {
                             return (
@@ -38,8 +40,24 @@ const PageSearch: FC<Iprops> = props => {
         }
     };
 
+    const dispatch = useAppDispatch();
+
+    const handleEnsureBtnClick = () => {
+        const formValues = form.getFieldsValue();
+        dispatch(
+            fetchPageListAction({
+                pageName: searchConfig.pageName,
+                queryInfo: formValues
+            })
+        );
+    };
+
+    const handleResetBtnClick = () => {
+        form.resetFields();
+    };
+
     const {
-        token: { colorBgContainer, borderRadiusLG }
+        token: { colorBgContainer }
     } = theme.useToken();
     return (
         <PageSearchWrap $searchBgColor={colorBgContainer}>
@@ -54,8 +72,13 @@ const PageSearch: FC<Iprops> = props => {
                     })}
             </Form>
             <div className='btns'>
-                <Button>重置</Button>
-                <Button type='primary' className='ensure-btn' autoInsertSpace={false}>
+                <Button onClick={handleResetBtnClick}>重置</Button>
+                <Button
+                    type='primary'
+                    className='ensure-btn'
+                    autoInsertSpace={false}
+                    onClick={handleEnsureBtnClick}
+                >
                     确定
                 </Button>
             </div>

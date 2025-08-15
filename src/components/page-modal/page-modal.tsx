@@ -5,7 +5,7 @@ import PageModalWrap from './style';
 import type { IModalConfig } from '@/types/index';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
 import { shallowEqual } from 'react-redux';
-import { createNewItemAction } from '@/store/modules/main/system/system';
+import { createNewItemAction, editPageItemInfoAction } from '@/store/modules/main/system/system';
 // import { createStyles } from 'antd-style';
 
 interface Iprops {
@@ -13,12 +13,15 @@ interface Iprops {
     isModalOpen: boolean;
     modalConfig: IModalConfig;
     editData: any;
+    isEditState: boolean;
     handleModalClose: () => void;
 }
 
 const PageModal: FC<Iprops> = props => {
-    const { isModalOpen, modalConfig, editData, handleModalClose } = props;
+    const { isModalOpen, modalConfig, editData, isEditState, handleModalClose } = props;
     const pageName = modalConfig.pageName;
+    const modalTitle = (isEditState ? '编辑' : '新建') + modalConfig.headerName;
+
     const { rolesList, menusList, departmentList } = useAppSelector(
         state => ({
             rolesList: state.main.pageRoles,
@@ -44,19 +47,31 @@ const PageModal: FC<Iprops> = props => {
             const values = await form.validateFields();
 
             // const values = await form.getFieldsValue();
-            dispatch(
-                createNewItemAction({
-                    pageName,
-                    queryInfo: {
-                        ...values
-                    }
-                })
-            );
+            if (!isEditState) {
+                dispatch(
+                    createNewItemAction({
+                        pageName,
+                        queryInfo: {
+                            ...values
+                        }
+                    })
+                );
+            } else {
+                dispatch(
+                    editPageItemInfoAction({
+                        pageName,
+                        userId: editData.id,
+                        queryInfo: {
+                            ...values
+                        }
+                    })
+                );
+            }
 
-            console.log('表单校验数据---------', values);
+            // console.log('表单校验数据---------', values);
             handleModalClose();
         } catch (err) {
-            console.log('表达校验未通过', err);
+            // console.log('表达校验未通过', err);
         }
     };
 
@@ -77,6 +92,7 @@ const PageModal: FC<Iprops> = props => {
                 case 'roleId':
                     options = rolesList;
                     break;
+                case 'parentId':
                 case 'departmentId':
                     options = departmentList;
                     break;
@@ -102,7 +118,7 @@ const PageModal: FC<Iprops> = props => {
     return (
         <PageModalWrap>
             <Modal
-                title={modalConfig.headerName}
+                title={modalTitle}
                 closable={{ 'aria-label': 'Custom Close Button' }}
                 open={isModalOpen}
                 onOk={handleOk}
@@ -122,7 +138,9 @@ const PageModal: FC<Iprops> = props => {
                     style={{ maxWidth: 500 }}
                 >
                     {modalConfig.modalItems.map((item, idx) => {
-                        return (
+                        return isEditState && item.name === 'password' ? (
+                            ''
+                        ) : (
                             <Form.Item
                                 key={item.name}
                                 label={item.label}

@@ -1,7 +1,7 @@
 import type { IModalConfig } from '@/types/index';
 const modalConfig: IModalConfig = {
     pageName: 'users',
-    headerName: '新建用户',
+    headerName: '用户',
     modalItems: [
         {
             type: 'input',

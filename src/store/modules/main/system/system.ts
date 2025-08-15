@@ -10,11 +10,13 @@ import type { RootState } from '@/store';
 interface Iquery {
     pageName: string;
     queryInfo: any;
+    userId?: number;
 }
 const initialState = {
     pageList: [],
     totalCount: 0,
-    pageSize: 8
+    pageSize: 8,
+    pageOffset: 0
 };
 
 // 异步action也要导出啊！！！！
@@ -23,6 +25,7 @@ export const fetchPageListAction = createAsyncThunk(
     'system/fetchList',
     async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
         try {
+            console.log('fetchPageListAction---------------data.pageName', data.pageName);
             const result = await getPageListData(data.pageName, data.queryInfo);
             const { list, totalCount } = result.data;
             list && dispatch(changePageListAction(list));
@@ -33,6 +36,34 @@ export const fetchPageListAction = createAsyncThunk(
     }
 );
 
+// 编辑某一项信息
+export const editPageItemInfoAction = createAsyncThunk<
+    void,
+    Iquery,
+    {
+        state: RootState;
+    }
+>('system/editItem', async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
+    try {
+        console.log('编辑-------------前');
+        await editPageItemInfo(data.pageName, data.userId, data.queryInfo);
+        console.log('编辑--------后');
+
+        dispatch(
+            fetchPageListAction({
+                pageName: data.pageName,
+                queryInfo: {
+                    offset: getState().system.pageOffset,
+                    size: getState().system.pageSize
+                }
+            })
+        );
+    } catch (err) {
+        console.log('er-------', err);
+        return rejectWithValue(err);
+    }
+});
+
 // 删除某一项的异步action
 export const deleteItemByIdAction = createAsyncThunk<
     void,
@@ -42,13 +73,12 @@ export const deleteItemByIdAction = createAsyncThunk<
     }
 >('system/deleteItem', async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
     try {
-        const result = await deletePageItemById(data.pageName, data.queryInfo);
-
+        await deletePageItemById(data.pageName, data.queryInfo);
         dispatch(
             fetchPageListAction({
                 pageName: data.pageName,
                 queryInfo: {
-                    offset: 0,
+                    offset: getState().system.pageOffset,
                     size: getState().system.pageSize
                 }
             })
@@ -73,7 +103,7 @@ export const createNewItemAction = createAsyncThunk<
             fetchPageListAction({
                 pageName: data.pageName,
                 queryInfo: {
-                    offset: 0,
+                    offset: getState().system.pageOffset,
                     size: getState().system.pageSize
                 }
             })
@@ -96,11 +126,18 @@ const systemSlice = createSlice({
         },
         changePageSizeAction(state, { payload }) {
             state.pageSize = payload;
+        },
+        changePageOffsetAction(state, { payload }) {
+            state.pageOffset = payload;
         }
     }
 });
 
-export const { changePageListAction, changeTotalCountAction, changePageSizeAction } =
-    systemSlice.actions;
+export const {
+    changePageListAction,
+    changeTotalCountAction,
+    changePageSizeAction,
+    changePageOffsetAction
+} = systemSlice.actions;
 
 export default systemSlice.reducer;

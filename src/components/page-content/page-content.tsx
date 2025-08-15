@@ -9,10 +9,11 @@ import { shallowEqual } from 'react-redux';
 import {
     fetchPageListAction,
     deleteItemByIdAction,
-    changePageSizeAction
+    changePageSizeAction,
+    changePageOffsetAction
 } from '@/store/modules/main/system/system';
 import type { IContentConfig } from '@/types/main';
-import contentConfig from '@/pages/main/system/user/config/content.config';
+// import contentConfig from '@/pages/main/system/user/config/content.config';
 
 interface Iprops {
     children?: ReactNode;
@@ -20,20 +21,20 @@ interface Iprops {
     handleModalOpen: () => void;
 }
 
-type DataIndexKeys = (typeof contentConfig.tableItems)[number]['dataIndex'];
-
-type IDataType = {
-    [K in DataIndexKeys]: string;
-};
-
-type DataType = IDataType & {
-    id: string;
-};
-
-// rowSelection object indicates the need for row selection
-type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
-
 const PageContent: FC<Iprops> = props => {
+    type DataIndexKeys = (typeof contentConfig.tableItems)[number]['dataIndex'];
+
+    type IDataType = {
+        [K in DataIndexKeys]: string;
+    };
+
+    type DataType = IDataType & {
+        id: string;
+    };
+
+    // rowSelection object indicates the need for row selection
+    type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
+    const { contentConfig, handleModalOpen } = props;
     const { pageList, totalCount } = useAppSelector(
         state => ({
             pageList: state.system.pageList,
@@ -43,6 +44,7 @@ const PageContent: FC<Iprops> = props => {
     );
     // const pageSize = 8;
     const pageName = contentConfig.pageName;
+    console.log('page-content-------pageName----', pageName);
 
     const dispatch = useAppDispatch();
 
@@ -64,6 +66,8 @@ const PageContent: FC<Iprops> = props => {
                 queryInfo: { offset: (curPageNum - 1) * curPageSize, size: curPageSize }
             })
         );
+
+        dispatch(changePageOffsetAction((curPageNum - 1) * curPageSize));
     }, [dispatch, curPageNum, curPageSize]);
 
     // 数组push方法返回的是新数组的长度啊
@@ -139,7 +143,7 @@ const PageContent: FC<Iprops> = props => {
     const handleEditBtnClick = record => {
         console.log('点击编辑按钮', record);
         // 把数据传给母组件
-        props.handleModalOpen(record);
+        props.handleModalOpen(true, record);
     };
 
     const handleCreateBtnClick = () => {
