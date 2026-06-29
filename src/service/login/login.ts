@@ -5,7 +5,7 @@ export function getAccountLogin(data: Iaccount) {
     console.log('发送网络请求-----------', data);
     return lxRequest.request({
         method: 'POST',
-        url: '/login',
+        url: '/api/login',
         data
     });
 }
@@ -14,7 +14,7 @@ export function getAccountLogin(data: Iaccount) {
 export function getUserInfoById(id: number) {
     return lxRequest.request({
         method: 'get',
-        url: `/users/${id}`
+        url: `/api/user/${id}`
     });
 }
 
@@ -22,6 +22,6 @@ export function getUserInfoById(id: number) {
 export function getMenusByRoleId(id: number) {
     return lxRequest.request({
         method: 'get',
-        url: `/role/${id}/menu`
+        url: `/api/user/role/${id}/menu`
     });
 }

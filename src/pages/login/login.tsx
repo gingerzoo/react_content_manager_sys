@@ -110,7 +110,7 @@ const Login: FC<Iprops> = props => {
     ];
     return (
         <LoginWrap>
-            <h1>react后台管理系统</h1>
+            <h1>金基德</h1>
             <div className='content'>
                 <Tabs defaultActiveKey='1' items={items} type='card' onChange={onChange} />
             </div>
