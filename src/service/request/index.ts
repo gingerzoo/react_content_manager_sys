@@ -33,7 +33,7 @@ class AppRequest {
                 return res.data;
             },
             err => {
-                return err;
+                return Promise.reject(err);
             }
         );
 

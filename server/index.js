@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const authRouter = require('./routes/auth');
 const userRouter = require('./routes/user');
+const systemRouter = require('./routes/system');
 
 
 
@@ -11,6 +12,7 @@ app.use(express.json());
 
 
 app.use('/api', authRouter);
+app.use('/api', systemRouter);
 app.use('/api/user', userRouter);
 
 

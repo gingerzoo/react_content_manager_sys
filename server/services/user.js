@@ -39,6 +39,10 @@ async function getMenusByRoleId(roleId) {
 
 }
 
+
+
 module.exports = {
-    getUserById
+    getUserById,
+    getMenusByRoleId,
+
 }

@@ -7,7 +7,8 @@ import {
 
 export default function loadDataFromRefresh() {
     const token = localStorage.getItem('token') || '';
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userInfoStr = localStorage.getItem('userInfo');
+    const userInfo = (userInfoStr && userInfoStr !== 'undefined') ? JSON.parse(userInfoStr) : {};
     const userMenus = JSON.parse(localStorage.getItem('userMenus') || '[]');
     if (token && userInfo && userMenus) {
         store.dispatch(changeUserTokenAction(token));

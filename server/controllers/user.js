@@ -25,6 +25,7 @@ async function getMenus(req, res, next) {
         try {
         const roleId = req.params.id;
         const menus = await userService.getMenusByRoleId(roleId);
+        console.log("mmenus---------",menus)
         res.json({ code: 200, data: menus });
     } catch (err) {
         next(err);
@@ -33,7 +34,12 @@ async function getMenus(req, res, next) {
 
 }
 
+
+
+
+
+
 module.exports = {
     getUserInfo,
-    getMenus
+    getMenus,
 }

@@ -5,6 +5,7 @@ import {
     createNewPageItem,
     editPageItemInfo
 } from '@/service/main/stystem/system';
+import { showMessage } from '@/utils/message';
 import type { RootState } from '@/store';
 
 interface Iquery {
@@ -45,9 +46,12 @@ export const editPageItemInfoAction = createAsyncThunk<
     }
 >('system/editItem', async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
     try {
-        console.log('编辑-------------前');
-        await editPageItemInfo(data.pageName, data.userId, data.queryInfo);
-        console.log('编辑--------后');
+        const result = await editPageItemInfo(data.pageName, data.userId!, data.queryInfo);
+        if (result.code !== 200) {
+            showMessage('error', result.message || '编辑失败');
+            return rejectWithValue(result);
+        }
+        showMessage('success', '编辑成功');
 
         dispatch(
             fetchPageListAction({
@@ -60,6 +64,7 @@ export const editPageItemInfoAction = createAsyncThunk<
         );
     } catch (err) {
         console.log('er-------', err);
+        showMessage('error', '编辑失败');
         return rejectWithValue(err);
     }
 });
@@ -73,7 +78,12 @@ export const deleteItemByIdAction = createAsyncThunk<
     }
 >('system/deleteItem', async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
     try {
-        await deletePageItemById(data.pageName, data.queryInfo);
+        const result = await deletePageItemById(data.pageName, data.queryInfo);
+        if (result.code !== 200) {
+            showMessage('error', result.message || '删除失败');
+            return rejectWithValue(result);
+        }
+        showMessage('success', '删除成功');
         dispatch(
             fetchPageListAction({
                 pageName: data.pageName,
@@ -84,6 +94,7 @@ export const deleteItemByIdAction = createAsyncThunk<
             })
         );
     } catch (err) {
+        showMessage('error', '删除失败');
         return rejectWithValue(err);
     }
 });
@@ -98,6 +109,7 @@ export const createNewItemAction = createAsyncThunk<
 >('system/createItem', async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
     try {
         const result = await createNewPageItem(data.pageName, data.queryInfo);
+        showMessage('success', '创建成功');
 
         dispatch(
             fetchPageListAction({
@@ -111,6 +123,7 @@ export const createNewItemAction = createAsyncThunk<
 
         console.log('获得列表数据-------', result.data);
     } catch (err) {
+        showMessage('error', '创建失败');
         return rejectWithValue(err);
     }
 });

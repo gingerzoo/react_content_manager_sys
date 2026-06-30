@@ -8,7 +8,7 @@ async function login(name, password) {
         return null;
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '12h' });
     return {
         token,
         id: user.id,
