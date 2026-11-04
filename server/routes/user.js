@@ -2,9 +2,10 @@ const router = require('express').Router();
 const authMiddleware = require('../middleware/auth');
 const userController = require('../controllers/user');
 
-router.get('/:id', authMiddleware, userController.getUserInfo);
 
-router.get('/role/:id/menu', authMiddleware, userController.getMenus);
+router.get('/me/menus', authMiddleware, userController.getMenus);
+
+router.get('/:id', authMiddleware, userController.getUserInfo);
 
 
 

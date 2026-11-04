@@ -1,14 +1,82 @@
 const pool = require('../db');
 
-async function findUsersList(offset, size) {
-    const [rows] = await pool.execute("SELECT id, username AS name, realname, cellphone, enable,  DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS createAt, DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') AS updateAt FROM users LIMIT ? OFFSET ?", [String(size), String(offset)]);
-    return rows
+function buildUserFilter(filters = {}) {
+    const conditions = [];
+    const params = [];
+
+    if (filters.username) {
+        conditions.push('LOCATE(?, username) > 0');
+        params.push(filters.username);
+    }
+
+    if (filters.realname) {
+        conditions.push('LOCATE(?, realname) > 0');
+        params.push(filters.realname);
+    }
+
+    if (filters.cellphone) {
+        conditions.push('LOCATE(?, cellphone) > 0');
+        params.push(filters.cellphone);
+    }
+
+    if (filters.enable !== null && filters.enable !== undefined) {
+        conditions.push('enable = ?');
+        params.push(filters.enable);
+    }
+
+    if (filters.createdFrom != null && filters.createdTo != null) {
+        conditions.push('created_at >= ?');
+        params.push(`${filters.createdFrom} 00:00:00`);
+
+        conditions.push(
+            'created_at < DATE_ADD(?, INTERVAL 1 DAY)'
+        );
+        params.push(`${filters.createdTo} 00:00:00`);
+    }
+
+    return {
+        whereSql:
+            conditions.length > 0
+                ? `WHERE ${conditions.join(' AND ')}`
+                : '',
+        params
+    };
+}
+
+async function findUsersList(offset, size, filters = {}) {
+    const { whereSql, params } = buildUserFilter(filters);
+
+    const [rows] = await pool.execute(
+        `SELECT
+            id,
+            username,
+            realname,
+            cellphone,
+            enable,
+            role_id AS roleId,
+            department_id AS departmentId,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS createAt,
+            DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') AS updateAt
+         FROM users
+         ${whereSql}
+         ORDER BY id DESC
+         LIMIT ? OFFSET ?`,
+        [...params, String(size), String(offset)]
+    );
+
+    return rows;
 }
 
 
+async function findUsersCount(filters = {}) {
+    const { whereSql, params } = buildUserFilter(filters);
 
-async function findUsersCount() {
-    const [rows] = await pool.execute('SELECT COUNT(*) AS total FROM users');
+    const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total 
+        FROM users
+        ${whereSql}`,
+        params
+    );
     return rows[0].total;
 }
 

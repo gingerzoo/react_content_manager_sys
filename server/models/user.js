@@ -1,7 +1,17 @@
 const pool = require('../db');
 
 async function findUserById(id) {
-    const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
+    const [rows] = await pool.execute(
+        `SELECT
+        id,
+        username,
+        realname,
+        cellphone,
+        enable,
+        role_id AS roleId,
+        department_id AS departmentId
+        FROM users 
+        WHERE id = ?`, [id]);
     return rows[0] || null;
 }
 

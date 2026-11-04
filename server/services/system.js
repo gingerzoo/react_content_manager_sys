@@ -1,11 +1,36 @@
 const systemModel = require('../models/system');
 const authModel = require('../models/auth');
+const { 
+    hashPassword,
+    getPasswordError
+} = require('../utils/password');
 
 
 
-async function getUsersList(offset, size) {
-     const list = await systemModel.findUsersList(offset, size);
-     const totalCount = await systemModel.findUsersCount();
+async function getUsersList({ 
+    offset, 
+    size, 
+    username,
+    realname,
+    cellphone,
+    enable,
+    createdFrom,
+    createdTo
+}) {
+    const filters = {
+        username,
+        realname,
+        cellphone,
+        enable,
+        createdFrom,
+        createdTo
+    };
+     const list = await systemModel.findUsersList(
+        offset, 
+        size, 
+        filters
+    );
+     const totalCount = await systemModel.findUsersCount(filters);
 
    return {
        list,
@@ -46,7 +71,6 @@ async function editUser(id, data) {
     }
 
     const fieldMap = {
-        name: 'username',
         roleId: 'role_id',
         departmentId: 'department_id'
     };
@@ -75,27 +99,51 @@ async function deleteUser(id) {
 
 
 async function createUser(userInfo) {
+    const {
+        username,
+        password,
+        realname,
+        cellphone,
+        roleId,
+        departmentId
+    } = userInfo;
 
-    const fieldMap = {
-        roleId: 'role_id',
-        departmentId: 'department_id',
-        name: 'username',
+    // 服务端校验，不能只依赖前端表单。
+    const passwordError = getPasswordError(password);
 
-    };
-
-    const mapped = {};
-    for (const [key, value] of Object.entries(userInfo)) {
-        if (value === undefined) continue;  // 跳过 undefined
-        const dbKey = fieldMap[key] || key;
-        mapped[dbKey] = value;
+    if (passwordError) {
+        return { error: passwordError };
     }
 
-     const existing = await authModel.findByUsername(mapped.username);
+    if (
+        typeof password !== 'string' ||
+        password.length < 6 ||
+        password.length > 128
+    ) {
+        return { error: '密码长度需要为 6–128 个字符' };
+    }
+
+     if (!Number.isInteger(roleId)) {
+        return { error: '请选择有效角色' };
+    }
+
+
+    const existing = await authModel.findByUsername(username);
     if (existing) return { error: '用户名已存在' };
 
-    await systemModel.createUser(mapped);
-}
+    const passwordHash = await hashPassword(password);
 
+    const data = {
+        username,
+        password: passwordHash,
+        realname: realname ?? '',
+        cellphone: cellphone ?? '',
+        role_id: roleId,
+        department_id: departmentId ?? null
+    };
+
+    await systemModel.createUser(data);
+}
 
 module.exports = {
     getUsersList,

@@ -3,7 +3,7 @@ const userModel = require('../models/user');
 
 
 async function getUserById(id) {
-     const user = await userModel.findById(id);
+     const user = await userModel.findUserById(id);
     if (!user) {
         return null;
     }
@@ -18,7 +18,7 @@ async function getUserById(id) {
 //         return null;
 //     }
 
-//     const result = await authModel.creatUser(name, password);
+//     const result = await authModel.createUser(name, password);
 //     return result
 // }
 

@@ -1,8 +1,8 @@
 const authService = require('../services/auth');
 async function login(req, res, next) {
-    const { name, password } = req.body;
+    const { username, password } = req.body;
     try {
-        const result = await authService.login(name, password);
+        const result = await authService.login(username, password);
         if (!result) {
             return res.status(401).json({
                 code: 401,
@@ -22,9 +22,9 @@ async function login(req, res, next) {
 }
 
 async function register(req, res, next) {
-    const { name, password } = req.body;
+    const { username, password } = req.body;
     try {
-        const result = await authService.register(name, password);
+        const result = await authService.register(username, password);
         if (!result) {
             return res.status(409).json({
                 code: 400,
