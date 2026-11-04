@@ -1,7 +1,7 @@
 import React, { memo, useRef, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
 import LoginWrap from './style';
-import { Tabs, Checkbox, Button } from 'antd';
+import { Tabs, Checkbox, Button, App as AntdApp } from 'antd';
 import type { TabsProps, CheckboxProps } from 'antd';
 import AccountLogin from './c-cpns/account-login';
 import PhoneLogin from './c-cpns/phone-login';
@@ -22,6 +22,9 @@ const Login: FC<Iprops> = props => {
     // 是否记住密码
     const [isPsdRemembered, setIsPswRemember] = useState(true);
 
+    const [submitting, setSubmitting] = useState(false);
+    const { message } = AntdApp.useApp();
+
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -36,7 +39,7 @@ const Login: FC<Iprops> = props => {
         }
 
         const defaultValues = {
-            name: rememberedUsername || ''
+            username: rememberedUsername || ''
         };
 
         if (accountLoginRef.current && isPsdRemembered) {
@@ -69,15 +72,18 @@ const Login: FC<Iprops> = props => {
     };
 
     const handleSubmitBtnClick = async () => {
+        if (submitting) return;
+        setSubmitting(true);
         try {
             const values = await accountLoginRef.current?.validate();
+            if (!values) return;
             console.log('表单数据:', values);
 
-            localStorage.setItem('username', values?.name || '');
+
+            localStorage.setItem('username', values?.username || '');
             console.log('点击登录时是否记住密码-------', isPsdRemembered);
-            dispatch(fetchLoginAction(values)).then(() => {
-                navigate('/main');
-            });
+            await dispatch(fetchLoginAction(values)).unwrap();
+             navigate('/main');
 
             if (isPsdRemembered) {
                 localStorage.setItem('password', values?.password || '');
@@ -89,8 +95,19 @@ const Login: FC<Iprops> = props => {
             }
 
             // TODO: 调用接口登录
-        } catch (err) {
-            console.log('表单校验失败:', err);
+        } catch (error: unknown) {
+            // 表单校验失败时，Form.Item 已经显示具体提示。
+            if (
+                typeof error === 'object' &&
+                error !== null &&
+                'errorFields' in error
+            ) {
+                return;
+        }
+
+            message.error('登录失败，请检查账号密码或稍后重试');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -125,6 +142,7 @@ const Login: FC<Iprops> = props => {
                     type='primary'
                     className='submit-btn'
                     disabled={!isSubmitAbled}
+                    loading={submitting}
                     onClick={handleSubmitBtnClick}
                 >
                     立即登录

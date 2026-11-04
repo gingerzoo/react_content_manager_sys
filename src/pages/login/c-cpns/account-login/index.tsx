@@ -8,7 +8,7 @@ interface Iprops {
 }
 
 type FieldType = {
-    name?: string;
+    username?: string;
     password?: string;
 };
 
@@ -27,7 +27,7 @@ const AccountLogin = forwardRef<AccountLoginRef, Iprops>((props, ref) => {
     // 用于判断账号密码是否都非空
     const isValid = () => {
         const values = form.getFieldsValue();
-        return !!values.name && !!values.password;
+        return !!values.username && !!values.password;
     };
 
     useImperativeHandle(ref, () => ({
@@ -57,7 +57,7 @@ const AccountLogin = forwardRef<AccountLoginRef, Iprops>((props, ref) => {
             >
                 <Form.Item<FieldType>
                     label='帐号'
-                    name='name'
+                    name='username'
                     rules={[
                         {
                             required: true,

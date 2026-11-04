@@ -10,7 +10,7 @@ import {
     fetchPageListAction,
     deleteItemByIdAction,
     changePageSizeAction,
-    changePageOffsetAction
+    changePaginationAction
 } from '@/store/modules/main/system/system';
 import type { IContentConfig } from '@/types/main';
 // import contentConfig from '@/pages/main/system/user/config/content.config';
@@ -35,10 +35,20 @@ const PageContent: FC<Iprops> = props => {
     // rowSelection object indicates the need for row selection
     type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
     const { contentConfig, handleModalOpen } = props;
-    const { pageList, totalCount } = useAppSelector(
+    const { 
+        pageList, 
+        totalCount,
+        pageSize,
+        pageOffset,
+        searchConditions
+
+    } = useAppSelector(
         state => ({
             pageList: state.system.pageList,
-            totalCount: state.system.totalCount
+            totalCount: state.system.totalCount,
+            pageSize: state.system.pageSize,
+            pageOffset: state.system.pageOffset,
+            searchConditions: state.system.searchConditions
         }),
         shallowEqual
     );
@@ -50,9 +60,8 @@ const PageContent: FC<Iprops> = props => {
 
     // 选中某一行的处理
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    // 页码更换处理
-    const [curPageNum, setCurPageNum] = useState<number>(1);
-    const [curPageSize, setPageSize] = useState<number>(8);
+
+
 
     const {
         token: { colorBgContainer }
@@ -63,12 +72,22 @@ const PageContent: FC<Iprops> = props => {
         dispatch(
             fetchPageListAction({
                 pageName,
-                queryInfo: { offset: (curPageNum - 1) * curPageSize, size: curPageSize }
+                queryInfo: { 
+                    ...searchConditions,
+                    offset: pageOffset,
+                    size: pageSize
+                 }
             })
         );
 
-        dispatch(changePageOffsetAction((curPageNum - 1) * curPageSize));
-    }, [dispatch, curPageNum, curPageSize]);
+  
+    }, [
+        dispatch,
+        pageName,
+        searchConditions,
+        pageOffset,
+        pageSize
+    ]);
 
     // 数组push方法返回的是新数组的长度啊
     const columns = contentConfig.tableItems.map(col => {
@@ -123,11 +142,13 @@ const PageContent: FC<Iprops> = props => {
         onChange: onSelectChange
     };
 
-    const handlePageNumChange = (pageN: number, pageSize: number) => {
-        console.log('什么啊发生了变化------', pageN, pageSize);
-        setCurPageNum(pageN);
-        setPageSize(pageSize);
-        dispatch(changePageSizeAction(pageSize));
+    const handlePageNumChange = (page: number, pageSize: number) => {
+        dispatch(
+            changePaginationAction({
+                page,
+                pageSize
+            })
+        );
     };
 
     const handleDeleteBtnClick = record => {
@@ -166,8 +187,9 @@ const PageContent: FC<Iprops> = props => {
                 pagination={{
                     position: ['bottomCenter'],
                     total: totalCount,
-                    defaultPageSize: 8,
-                    defaultCurrent: 1,
+                    current: Math.floor(pageOffset / pageSize) + 1,
+                    pageSize,
+                    showSizeChanger: true,
                     onChange: handlePageNumChange
                 }}
             />

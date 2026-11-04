@@ -4,7 +4,7 @@ const searchConfig: ISearchConfig = {
     formItems: [
         {
             type: 'input',
-            name: 'name',
+            name: 'username',
             label: '用户名',
             placeholder: '请输入查询的用户名称',
             initialValue: 'aaa'
@@ -23,7 +23,7 @@ const searchConfig: ISearchConfig = {
         },
         {
             type: 'select',
-            name: 'status',
+            name: 'enable',
             label: '状态',
             placeholder: '请输入查询的状态',
             options: [
@@ -39,7 +39,7 @@ const searchConfig: ISearchConfig = {
         },
         {
             type: 'createAt',
-            name: 'RangePicker',
+            name: 'createdRange',
             label: '创建时间'
         }
     ]

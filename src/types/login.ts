@@ -1,9 +1,9 @@
 export interface Iaccount {
-    name: string;
+    username: string;
     password: string;
 }
 
 export interface IUserinfo {
-    name: string;
+    username: string;
     password: string;
 }

@@ -1,6 +1,6 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Button, Modal, Form, Input, Select } from 'antd';
+import { Button, Modal, Form, Input, Select, App as AntdApp } from 'antd';
 import PageModalWrap from './style';
 import type { IModalConfig } from '@/types/index';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
@@ -21,6 +21,9 @@ const PageModal: FC<Iprops> = props => {
     const { isModalOpen, modalConfig, editData, isEditState, handleModalClose } = props;
     const pageName = modalConfig.pageName;
     const modalTitle = (isEditState ? '编辑' : '新建') + modalConfig.headerName;
+    const submittingRef = useRef(false);
+    const [submitting, setSubmitting] = useState(false);
+    const { message } = AntdApp.useApp();
 
     const { rolesList, menusList, departmentList } = useAppSelector(
         state => ({
@@ -43,21 +46,26 @@ const PageModal: FC<Iprops> = props => {
     }, [form, editData]);
 
     const handleOk = async () => {
+        if (submittingRef.current) return;
+
+        // 同步上锁，必须放在第一次 await 之前。
+        submittingRef.current = true;
+        setSubmitting(true);
         try {
             const values = await form.validateFields();
 
             // const values = await form.getFieldsValue();
             if (!isEditState) {
-                dispatch(
+                await dispatch(
                     createNewItemAction({
                         pageName,
                         queryInfo: {
                             ...values
                         }
                     })
-                );
+                ).unwrap();
             } else {
-                dispatch(
+                await dispatch(
                     editPageItemInfoAction({
                         pageName,
                         userId: editData.id,
@@ -65,13 +73,31 @@ const PageModal: FC<Iprops> = props => {
                             ...values
                         }
                     })
-                );
+                ).unwrap();
             }
 
             // console.log('表单校验数据---------', values);
             handleModalClose();
-        } catch (err) {
-            // console.log('表达校验未通过', err);
+        } catch (error: unknown) {
+            if (
+                typeof error === 'object' &&
+                error !== null &&
+                'errorFields' in error
+            ) {
+                return;
+            }
+
+            // 编辑失败提示暂时沿用现有 thunk 的处理。
+            if (!isEditState) {
+                message.error(
+                    typeof error === 'string'
+                        ? error
+                        : '创建失败，请稍后重试'
+                );
+            }
+        }  finally {
+            submittingRef.current = false;
+            setSubmitting(false);
         }
     };
 
@@ -119,13 +145,17 @@ const PageModal: FC<Iprops> = props => {
         <PageModalWrap>
             <Modal
                 title={modalTitle}
-                closable={{ 'aria-label': 'Custom Close Button' }}
                 open={isModalOpen}
                 onOk={handleOk}
                 centered
                 onCancel={handleCancel}
                 okText='确认'
                 cancelText='取消'
+                confirmLoading={submitting}
+                cancelButtonProps={{ disabled: submitting }}
+                closable={!submitting}
+                maskClosable={!submitting}
+                keyboard={!submitting}
                 classNames={{
                     header: 'my-modal-header'
                 }}

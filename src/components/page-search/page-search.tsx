@@ -3,7 +3,7 @@ import type { FC, ReactNode } from 'react';
 import type { ISearchConfig } from '@/types/index';
 import { Button, Form, Input, Select, DatePicker, theme } from 'antd';
 import PageSearchWrap from './style';
-import { fetchPageListAction } from '@/store/modules/main/system/system';
+import { changeSearchConditionsAction } from '@/store/modules/main/system/system';
 import { useAppDispatch } from '@/hooks/hook';
 
 interface Iprops {
@@ -43,17 +43,44 @@ const PageSearch: FC<Iprops> = props => {
     const dispatch = useAppDispatch();
 
     const handleEnsureBtnClick = () => {
-        const formValues = form.getFieldsValue();
+        const values = form.getFieldsValue();
+
+        const normalizeText = (value: unknown) =>
+        typeof value === 'string' ? value.trim() : '';
+       
+        let enable: 0 | 1 | null = null;
+
+        if (values.enable === '1' || values.enable === 1) {
+            enable = 1;
+        } else if (values.enable === '0' || values.enable === 0) {
+            enable = 0;
+        }
+
+        const range = values.createdRange;
         dispatch(
-            fetchPageListAction({
-                pageName: searchConfig.pageName,
-                queryInfo: formValues
+            changeSearchConditionsAction({
+                username: normalizeText(values.username),
+                realname: normalizeText(values.realname),
+                cellphone: normalizeText(values.cellphone),
+                enable,
+                createdFrom: range?.[0]?.format('YYYY-MM-DD') ?? null,
+                createdTo: range?.[1]?.format('YYYY-MM-DD') ?? null
             })
         );
     };
 
     const handleResetBtnClick = () => {
         form.resetFields();
+        dispatch(
+            changeSearchConditionsAction({
+                username: '',
+                realname: '',
+                cellphone: '',
+                enable: null,
+                createdFrom: null,
+                createdTo: null
+            })
+        );
     };
 
     const {

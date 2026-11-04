@@ -5,7 +5,7 @@ const modalConfig: IModalConfig = {
     modalItems: [
         {
             type: 'input',
-            name: 'name',
+            name: 'username',
             label: '用户名',
             placeholder: '请输入用户名',
             initialValue: 'aaa'

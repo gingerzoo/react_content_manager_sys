@@ -13,15 +13,15 @@ export function getAccountLogin(data: Iaccount) {
 // 获取用户信息
 export function getUserInfoById(id: number) {
     return lxRequest.request({
-        method: 'get',
+        method: 'GET',
         url: `/user/${id}`
     });
 }
 
 // 获取用户的角色
-export function getMenusByRoleId(id: number) {
+export function getCurrentUserMenus() {
     return lxRequest.request({
-        method: 'get',
-        url: `/user/role/${id}/menu`
+        method: 'GET',
+        url: `/user/me/menus`
     });
 }

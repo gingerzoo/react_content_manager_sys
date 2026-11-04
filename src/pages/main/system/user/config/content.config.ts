@@ -8,7 +8,7 @@ const contentConfig: IContentonfig = {
     },
     tableItems: [
         {
-            dataIndex: 'name',
+            dataIndex: 'username',
             title: '用户名',
             width: '150px',
             align: 'center'
@@ -47,7 +47,7 @@ const contentConfig: IContentonfig = {
 export default contentConfig;
 
 export interface IDataType {
-    name: string;
+    username: string;
     realname: string;
     cellphone: string;
     status: string;
