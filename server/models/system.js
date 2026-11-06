@@ -1,5 +1,23 @@
 const pool = require('../db');
 
+async function findRoleById(id) {
+    const [rows] = await pool.execute(
+        'SELECT id FROM roles WHERE id = ?',
+        [id]
+    );
+
+    return rows[0] || null;
+}
+
+async function findDepartmentById(id) {
+    const [rows] = await pool.execute(
+        'SELECT id FROM departments WHERE id = ?',
+        [id]
+    );
+
+    return rows[0] || null;
+}
+
 function buildUserFilter(filters = {}) {
     const conditions = [];
     const params = [];
@@ -146,5 +164,7 @@ module.exports = {
     editUser,
     deleteUser,
     createUser,
-    findUserById
+    findUserById,
+    findRoleById,
+    findDepartmentById
 }

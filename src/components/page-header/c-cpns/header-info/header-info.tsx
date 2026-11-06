@@ -2,6 +2,8 @@ import React, { memo, useState } from 'react';
 import type { FC, ReactNode } from 'react';
 import HeaderInfoWrap from './style';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '@/hooks/hook';
+
 import {
     MailOutlined,
     MessageOutlined,
@@ -18,6 +20,9 @@ interface Iprops {
 }
 
 const HeaderInfo: FC<Iprops> = props => {
+    const username = useAppSelector(
+        state => state.login.userInfo.username
+    );
     const navigate = useNavigate();
     const items: MenuProps['items'] = [
         {
@@ -69,7 +74,7 @@ const HeaderInfo: FC<Iprops> = props => {
                     src='https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
                 />
                 <Dropdown menu={{ items, onClick: handleMenuClick }}>
-                    <Space>coderwhy</Space>
+                    <Space>{username || '未登录'}</Space>
                 </Dropdown>
             </div>
         </HeaderInfoWrap>

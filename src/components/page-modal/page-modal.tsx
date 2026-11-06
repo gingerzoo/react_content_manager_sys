@@ -6,7 +6,7 @@ import type { IModalConfig } from '@/types/index';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
 import { shallowEqual } from 'react-redux';
 import { createNewItemAction, editPageItemInfoAction } from '@/store/modules/main/system/system';
-// import { createStyles } from 'antd-style';
+import { getPasswordError } from '@/utils/password';
 
 interface Iprops {
     children?: ReactNode;
@@ -116,12 +116,21 @@ const PageModal: FC<Iprops> = props => {
             let options: any[] = [];
             switch (item.name) {
                 case 'roleId':
-                    options = rolesList;
+                    options = rolesList.filter(
+                        role => Number(role.id) !== 0
+                    );
                     break;
                 case 'parentId':
                 case 'departmentId':
                     options = departmentList;
                     break;
+                case 'enable':
+                    options = [
+                        { id: 1, name: '启用' },
+                        { id: 0, name: '禁用' }
+                    ];
+                    break;
+                            
                 default:
                     break;
             }
@@ -168,6 +177,10 @@ const PageModal: FC<Iprops> = props => {
                     style={{ maxWidth: 500 }}
                 >
                     {modalConfig.modalItems.map((item, idx) => {
+                        // 新建时不展示状态，由服务端使用默认值。
+                        if (!isEditState && item.name === 'enable') {
+                            return null;
+                        }
                         return isEditState && item.name === 'password' ? (
                             ''
                         ) : (
@@ -179,7 +192,26 @@ const PageModal: FC<Iprops> = props => {
                                     {
                                         required: true,
                                         message: `请输入${item.label}`
-                                    }
+                                    },
+                                    ...(item.name === 'password' 
+                                        ? [
+                                            {
+                                                validator: async (_rule: unknown, value: unknown) => {
+                                                    // 空值交给 required 规则提示。
+                                                    if (value === undefined || value === null || value === '') {
+                                                        return;
+                                                    }
+
+                                                    const errorMessage = getPasswordError(value);
+
+                                                    if (errorMessage) {
+                                                        throw new Error(errorMessage);
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                        : []
+                                    ) 
                                 ]}
                             >
                                 {renderModalItem(item)}

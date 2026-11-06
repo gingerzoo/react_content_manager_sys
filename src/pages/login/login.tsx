@@ -66,8 +66,6 @@ const Login: FC<Iprops> = props => {
 
     // 记住密码状态更改
     const onCheckBoxChange: CheckboxProps['onChange'] = e => {
-        console.log(`checked = ${e.target.checked}`);
-        console.log('记住密码状态更改---------', e.target.checked);
         setIsPswRemember(e.target.checked);
     };
 
@@ -77,11 +75,9 @@ const Login: FC<Iprops> = props => {
         try {
             const values = await accountLoginRef.current?.validate();
             if (!values) return;
-            console.log('表单数据:', values);
 
 
             localStorage.setItem('username', values?.username || '');
-            console.log('点击登录时是否记住密码-------', isPsdRemembered);
             await dispatch(fetchLoginAction(values)).unwrap();
              navigate('/main');
 
@@ -105,7 +101,11 @@ const Login: FC<Iprops> = props => {
                 return;
         }
 
-            message.error('登录失败，请检查账号密码或稍后重试');
+            message.error(
+                typeof error === 'string'
+                    ? error
+                    : '登录失败，请稍后重试'
+            );
         } finally {
             setSubmitting(false);
         }

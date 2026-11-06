@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAccountLogin, getUserInfoById, getCurrentUserMenus } from '@/service/login/login';
 import type { Iaccount } from '@/types';
+import axios from 'axios';
 
 const initialState = {
     token: localStorage.getItem('token') ?? '',
@@ -11,7 +12,7 @@ const initialState = {
 // 登录的异步action
 export const fetchLoginAction = createAsyncThunk(
     'login/fetchLogin',
-    async (data: Iaccount, { dispatch }) => {
+    async (data: Iaccount, { dispatch, rejectWithValue  }) => {
         try {
             const loginRes = await getAccountLogin(data);
             if (loginRes.code !== 200 || !loginRes.data?.token) {
@@ -19,10 +20,6 @@ export const fetchLoginAction = createAsyncThunk(
             }
 
             const loginData = loginRes.data;
-
-            
-
-            console.log('登录接口拿到的数据---------', loginData);
 
             dispatch(changeUserTokenAction(loginData.token));
             localStorage.setItem('token', loginData.token);
@@ -56,10 +53,46 @@ export const fetchLoginAction = createAsyncThunk(
             localStorage.setItem('userMenus', JSON.stringify(menusRes.data));
 
             // return res.data;
-        } catch (err) {
-            console.log('登录流程失败', err);
-        }
-    }
+        } catch (error: unknown) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('userMenus');
+            localStorage.removeItem('selectedKeys');
+
+            dispatch(changeUserTokenAction(''));
+            dispatch(changeUserInfoAction({}));
+            dispatch(changeUserMenusAction([]));
+
+            // 让 thunk 进入 rejected，页面的 unwrap() 才能感知失败。
+            let errorMessage = '登录失败，请稍后重试';
+
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status;
+                const serverMessage = error.response?.data?.message;
+
+                if (
+                    error.code === 'ECONNABORTED' ||
+                    error.code === 'ETIMEDOUT'
+                ) {
+                    errorMessage = '请求超时，请稍后重试';
+                } else if (!error.response) {
+                    errorMessage = '无法连接服务，请检查网络或稍后重试';
+                } else if (status !== undefined && status >= 500) {
+                    errorMessage = '服务暂时不可用，请稍后重试';
+                } else if (
+                    typeof serverMessage === 'string' &&
+                    serverMessage.trim()
+                ) {
+                    errorMessage = serverMessage;
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message || errorMessage;
+            }
+
+            return rejectWithValue(errorMessage);
+                        
+                    }
+                }
 );
 
 const loginStore = createSlice({

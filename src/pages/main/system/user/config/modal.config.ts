@@ -31,6 +31,12 @@ const modalConfig: IModalConfig = {
         },
         {
             type: 'select',
+            name: 'enable',
+            label: '状态',
+            placeholder: '请选择状态'
+        },
+        {
+            type: 'select',
             name: 'roleId',
             label: '角色',
             placeholder: '请选择角色'

@@ -1,6 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Button, Table, Radio, Space, theme } from 'antd';
+import { Button, Table, Radio, Space, theme, App as AntdApp } from 'antd';
 import PageContentWrap from './style';
 import type { TableProps } from 'antd';
 import { FormOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -19,6 +19,12 @@ interface Iprops {
     children?: ReactNode;
     contentConfig: IContentConfig;
     handleModalOpen: () => void;
+}
+
+interface UserActionRecord {
+    id: number;
+    username: string;
+    roleId: number;
 }
 
 const PageContent: FC<Iprops> = props => {
@@ -57,6 +63,7 @@ const PageContent: FC<Iprops> = props => {
     console.log('page-content-------pageName----', pageName);
 
     const dispatch = useAppDispatch();
+    const { modal } = AntdApp.useApp();
 
     // 选中某一行的处理
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -117,6 +124,7 @@ const PageContent: FC<Iprops> = props => {
                 <Button
                     type='text'
                     icon={<FormOutlined />}
+                    disabled={record.roleId === 0}
                     onClick={() => handleEditBtnClick(record)}
                 >
                     编辑
@@ -125,6 +133,7 @@ const PageContent: FC<Iprops> = props => {
                     type='text'
                     danger
                     icon={<DeleteOutlined />}
+                    disabled={record.roleId === 0}
                     onClick={() => handleDeleteBtnClick(record)}
                 >
                     删除
@@ -151,17 +160,36 @@ const PageContent: FC<Iprops> = props => {
         );
     };
 
-    const handleDeleteBtnClick = record => {
-        console.log('record-----------删除', record);
-        dispatch(
-            deleteItemByIdAction({
-                pageName,
-                queryInfo: record.id
-            })
-        );
+    const handleDeleteBtnClick = (record: UserActionRecord) => {
+        if (record.roleId === 0) return;
+        modal.confirm({
+        title: '确认删除？',
+        content: `删除“${record.username ?? record.id}”后无法恢复。`,
+        okText: '确认删除',
+        cancelText: '取消',
+        okButtonProps: {
+            danger: true
+        },
+        maskClosable: false,
+
+        onOk: async () => {
+            await dispatch(
+                deleteItemByIdAction({
+                    pageName,
+                    queryInfo: record.id
+                })
+            ).unwrap();
+
+            // 删除成功后，清除该行的勾选状态。
+            setSelectedRowKeys(keys =>
+                keys.filter(key => key !== record.id)
+            );
+        }
+           });
     };
 
-    const handleEditBtnClick = record => {
+    const handleEditBtnClick = (record: UserActionRecord) => {
+        if (record.roleId === 0) return;
         console.log('点击编辑按钮', record);
         // 把数据传给母组件
         props.handleModalOpen(true, record);
@@ -190,6 +218,7 @@ const PageContent: FC<Iprops> = props => {
                     current: Math.floor(pageOffset / pageSize) + 1,
                     pageSize,
                     showSizeChanger: true,
+                    pageSizeOptions: [4, 6, 8, 10, 20],
                     onChange: handlePageNumChange
                 }}
             />

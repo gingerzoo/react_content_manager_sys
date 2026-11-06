@@ -36,14 +36,21 @@ const initialSearchConditions: UserSearchConditions = {
 const initialState = {
     pageList: [],
     totalCount: 0,
-    pageSize: 2,
+    pageSize: 4,
     pageOffset: 0,
     searchConditions: initialSearchConditions
 };
 
 // 异步action也要导出啊！！！！
 // 获取pagelist的异步action
-export const fetchPageListAction = createAsyncThunk(
+export const fetchPageListAction = createAsyncThunk<
+    void,
+    Iquery,
+    {
+        state: RootState;
+        rejectValue: string;
+    }
+>(
     'system/fetchList',
     async (data: Iquery, { dispatch, getState, rejectWithValue }) => {
         try {
@@ -63,8 +70,36 @@ export const fetchPageListAction = createAsyncThunk(
             }
             const { list, totalCount } = result.data;
         
-            dispatch(changePageListAction(list));
+            const { offset, size } = data.queryInfo;
+            const currentState = getState().system;
+
+            // 请求期间用户可能已经切换页码。
+            // 不让旧页码的响应修改当前分页。
+            if (
+                offset !== currentState.pageOffset ||
+                size !== currentState.pageSize
+            ) {
+                return;
+            }
+
+            // 总数为 0 时，仍停留在第一页，offset 为 0。
+            const lastPageOffset =
+                totalCount === 0
+                    ? 0
+                    : Math.floor((totalCount - 1) / size) * size;
+
             dispatch(changeTotalCountAction(totalCount));
+
+            if (offset > lastPageOffset) {
+                // 清除旧页数据，再修正分页状态。
+                dispatch(changePageListAction([]));
+                dispatch(changePageOffsetAction(lastPageOffset));
+
+                // pageOffset 变化后，组件的 useEffect 会重新请求。
+                return;
+            }
+
+            dispatch(changePageListAction(list));
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 const serverMessage = error.response?.data?.message;
@@ -96,8 +131,9 @@ export const editPageItemInfoAction = createAsyncThunk<
     try {
         const result = await editPageItemInfo(data.pageName, data.userId!, data.queryInfo);
         if (result.code !== 200) {
-            showMessage('error', result.message || '编辑失败');
-            return rejectWithValue(result);
+            const errorMessage = result.message || '编辑失败';
+            showMessage('error', errorMessage);
+            return rejectWithValue(errorMessage);
         }
         showMessage('success', '编辑成功');
 
@@ -111,10 +147,24 @@ export const editPageItemInfoAction = createAsyncThunk<
                 }
             })
         );
-    } catch (err) {
-        console.log('er-------', err);
-        showMessage('error', '编辑失败');
-        return rejectWithValue(err);
+    } catch (error: unknown) {
+    let errorMessage = '编辑失败，请稍后重试';
+
+        if (axios.isAxiosError(error)) {
+            const serverMessage = error.response?.data?.message;
+
+            if (
+                typeof serverMessage === 'string' &&
+                serverMessage.trim()
+            ) {
+                errorMessage = serverMessage;
+            } else if (!error.response) {
+                errorMessage = '请求失败，请检查网络或后端服务';
+            }
+        }
+
+        showMessage('error', errorMessage);
+        return rejectWithValue(errorMessage);
     }
 });
 
@@ -129,9 +179,13 @@ export const deleteItemByIdAction = createAsyncThunk<
     try {
         const result = await deletePageItemById(data.pageName, data.queryInfo);
         if (result.code !== 200) {
-            showMessage('error', result.message || '删除失败');
-            return rejectWithValue(result);
+           if (result.code !== 200) {
+            const errorMessage = result.message || '删除失败';
+
+            showMessage('error', errorMessage);
+            return rejectWithValue(errorMessage);
         }
+                }
         showMessage('success', '删除成功');
         dispatch(
             fetchPageListAction({
@@ -143,9 +197,24 @@ export const deleteItemByIdAction = createAsyncThunk<
                 }
             })
         );
-    } catch (err) {
-        showMessage('error', '删除失败');
-        return rejectWithValue(err);
+    } catch (error: unknown) {
+        let errorMessage = '删除失败，请稍后重试';
+
+        if (axios.isAxiosError(error)) {
+            const serverMessage = error.response?.data?.message;
+
+            if (
+                typeof serverMessage === 'string' &&
+                serverMessage.trim()
+            ) {
+                errorMessage = serverMessage;
+            } else if (!error.response) {
+                errorMessage = '请求失败，请检查网络或后端服务';
+            }
+        }
+
+        showMessage('error', errorMessage);
+        return rejectWithValue(errorMessage);
     }
 });
 

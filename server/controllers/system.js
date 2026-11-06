@@ -166,9 +166,11 @@ async function editUser(req, res, next) {
         const data = req.body;
         const result = await systemService.editUser(id, data);
         if (result && result.error) {
-            return res.json({ 
-                code: 403, 
-                message: result.error 
+            const status = result.status ?? 400;
+
+            return res.status(status).json({
+                code: status,
+                message: result.error
             });
         }
         res.json({
@@ -203,10 +205,13 @@ async function createUser(req, res, next) {
         const userInfo = req.body;
         const result = await systemService.createUser(userInfo);
         if (result && result.error) {
-            return res.json({ 
-                code: 400, 
-                message: result.error 
-            });
+           if (result && result.error) {
+                const status = result.status ?? 400;
+                return res.status(status).json({
+                    code: status,
+                    message: result.error
+                });
+            }
         }
 
         res.json({ code: 200, message: '创建成功' });
