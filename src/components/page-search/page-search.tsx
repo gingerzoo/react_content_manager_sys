@@ -21,7 +21,7 @@ const PageSearch: FC<Iprops> = props => {
         if (item.type === 'input') {
             return <Input placeholder={item.placeholder} />;
         } else if (item.type === 'createAt') {
-            return <RangePicker />;
+            return <RangePicker style={{ width: '100%' }}/>;
         } else if (item.type === 'select') {
             return (
                 <Select placeholder={item.placeholder}>
@@ -88,7 +88,13 @@ const PageSearch: FC<Iprops> = props => {
     } = theme.useToken();
     return (
         <PageSearchWrap $searchBgColor={colorBgContainer}>
-            <Form form={form} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <Form 
+                form={form} 
+                layout='horizontal'
+                labelCol={{ flex: '84px' }}
+                wrapperCol={{ flex: 1 }}
+                labelWrap
+            >
                 {props.searchConfig.formItems &&
                     searchConfig.formItems.map(item => {
                         return (

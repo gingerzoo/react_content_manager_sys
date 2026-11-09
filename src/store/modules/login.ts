@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAccountLogin, getUserInfoById, getCurrentUserMenus } from '@/service/login/login';
 import type { Iaccount } from '@/types';
 import axios from 'axios';
+import { clearLoginStorage } from '@/utils/session';
 
 const initialState = {
     token: localStorage.getItem('token') ?? '',
@@ -54,10 +55,7 @@ export const fetchLoginAction = createAsyncThunk(
 
             // return res.data;
         } catch (error: unknown) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userInfo');
-            localStorage.removeItem('userMenus');
-            localStorage.removeItem('selectedKeys');
+           clearLoginStorage();
 
             dispatch(changeUserTokenAction(''));
             dispatch(changeUserInfoAction({}));

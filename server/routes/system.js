@@ -11,6 +11,11 @@ router.post('/menu/list', authMiddleware, systemController.getMenuList);
 router.patch('/users/:id', authMiddleware, requireAdmin, systemController.editUser);
 router.delete('/users/:id', authMiddleware, requireAdmin, systemController.deleteUser);
 router.post('/users', authMiddleware, requireAdmin, systemController.createUser);
-
+router.post(
+    '/departments/list',
+    authMiddleware,
+    requireAdmin,
+    systemController.getDepartmentPage
+);
 
 module.exports = router;

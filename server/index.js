@@ -4,17 +4,15 @@ const app = express();
 const authRouter = require('./routes/auth');
 const userRouter = require('./routes/user');
 const systemRouter = require('./routes/system');
-
+const agentRouter = require('./routes/agent');
 
 
 // 解析body
 app.use(express.json());
-
-
 app.use('/api', authRouter);
 app.use('/api', systemRouter);
 app.use('/api/user', userRouter);
-
+app.use('/api/agent', agentRouter);
 
 
 

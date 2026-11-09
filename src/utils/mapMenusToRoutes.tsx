@@ -11,6 +11,9 @@ interface Ibreadcrumb {
     onClick?: () => void;
 }
 const Main = React.lazy(() => import('@/pages/main/index'));
+const NoContent = React.lazy(
+    () => import('@/pages/no-content/index')
+);
 
 export function loadLocalRoutes(): RouteObject[] {
     // eager: true 的作用是一次性同步加载所有模块
@@ -67,6 +70,11 @@ export function mapMeunsToRoutes(userMenus: any[]) {
                 }
             });
         }
+    });
+    // 后台路径即使没有匹配到菜单，也要先经过登录守卫。
+    childrenRoutes.push({
+        path: '*',
+        element: <NoContent />
     });
     return [
         {

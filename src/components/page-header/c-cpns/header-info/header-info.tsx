@@ -1,8 +1,8 @@
 import React, { memo, useState } from 'react';
 import type { FC, ReactNode } from 'react';
 import HeaderInfoWrap from './style';
-import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/hooks/hook';
+import { clearLoginStorage } from '@/utils/session';
 
 import {
     MailOutlined,
@@ -23,7 +23,7 @@ const HeaderInfo: FC<Iprops> = props => {
     const username = useAppSelector(
         state => state.login.userInfo.username
     );
-    const navigate = useNavigate();
+   
     const items: MenuProps['items'] = [
         {
             key: '1',
@@ -46,11 +46,8 @@ const HeaderInfo: FC<Iprops> = props => {
     ];
     const handleMenuClick: MenuProps['onClick'] = e => {
         if (e.key === '1') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userInfo');
-            localStorage.removeItem('selectedKeys');
-            localStorage.removeItem('userMenus');
-            navigate('/login');
+            clearLoginStorage();
+            window.location.replace('/login');
         }
     };
 

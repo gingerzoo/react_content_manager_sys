@@ -9,20 +9,31 @@ const PageSearchWrap = styled.div<IPageSearch>`
     background-color: ${({ $searchBgColor }) => $searchBgColor};
     border-radius: 20px 20px 20px 0;
     .ant-form {
-        display: flex;
-        flex-wrap: wrap;
-        row-gap: 8px;
-        column-gap: 60px;
+        display: grid;
+        grid-template-columns:
+            repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        gap: 16px 24px;
 
         .ant-form-item {
-            flex: 0 1 calc((100% - 150px) / 3); /* 三列，每列占宽度的三分之一，减去间隙 */
-            min-width: 200px;
+            min-width: 0;
+            margin-bottom: 0;
+        }
+
+        .ant-form-item-control {
+            min-width: 0;
+        }
+
+        .ant-input,
+        .ant-select,
+        .ant-picker {
+            width: 100%;
+            min-width: 0;
         }
     }
     .btns {
         display: flex;
         justify-content: end;
-        margin-top: -5px;
+        margin-top: 20px;
 
         .ensure-btn {
             margin-left: 15px;

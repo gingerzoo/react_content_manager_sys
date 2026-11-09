@@ -220,6 +220,69 @@ async function createUser(req, res, next) {
     }
 }
 
+async function getDepartmentPage(req, res, next) {
+    try {
+        const body = req.body ?? {};
+
+        if (
+            typeof body !== 'object' ||
+            Array.isArray(body)
+        ) {
+            return res.status(400).json({
+                code: 400,
+                message: '查询参数格式不正确'
+            });
+        }
+
+        const {
+            offset = 0,
+            size = 8,
+            name = '',
+            leader = ''
+        } = body;
+
+        if (
+            !Number.isSafeInteger(offset) ||
+            offset < 0 ||
+            !Number.isSafeInteger(size) ||
+            size < 1 ||
+            size > 100
+        ) {
+            return res.status(400).json({
+                code: 400,
+                message: '分页参数不正确'
+            });
+        }
+
+        if (
+            typeof name !== 'string' ||
+            name.length > 100 ||
+            typeof leader !== 'string' ||
+            leader.length > 100
+        ) {
+            return res.status(400).json({
+                code: 400,
+                message: '部门名称、负责人必须是字符串，且不能超过 100 个字符'
+            });
+        }
+
+        const data = await systemService.getDepartmentPage({
+            offset,
+            size,
+            name: name.trim(),
+            leader: leader.trim()
+        });
+
+        return res.json({
+            code: 200,
+            message: '获取部门列表成功',
+            data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 
 module.exports = {
    getUsersList,
@@ -228,5 +291,6 @@ module.exports = {
    getMenuList,
    editUser,
    deleteUser,
-   createUser
+   createUser,
+   getDepartmentPage
 }

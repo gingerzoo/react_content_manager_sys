@@ -10,7 +10,7 @@ const AuthRouter = ({ children }: IProps) => {
 
     if (!token) {
         // 未登录，重定向到 /login 并记录跳转前的路径
-        return <Navigate to='/login' />;
+        return <Navigate to='/login' replace />;
     }
 
     // 已登录，放行

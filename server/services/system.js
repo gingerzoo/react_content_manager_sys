@@ -331,6 +331,10 @@ async function createUser(userInfo) {
     await systemModel.createUser(data);
 }
 
+async function getDepartmentPage(filters) {
+    return systemModel.findDepartmentPage(filters);
+}
+
 module.exports = {
     getUsersList,
     getRoleList,
@@ -338,5 +342,6 @@ module.exports = {
     getMenuList,
     editUser,
     deleteUser,
-    createUser
+    createUser,
+    getDepartmentPage
 }

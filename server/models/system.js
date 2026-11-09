@@ -154,6 +154,59 @@ async function createUser(data) {
     return result;
 }
 
+async function findDepartmentPage({
+    offset,
+    size,
+    name,
+    leader
+}) {
+    const conditions = [];
+    const params = [];
+
+    if (name) {
+        conditions.push('LOCATE(?, d.name) > 0');
+        params.push(name);
+    }
+
+    if (leader) {
+        conditions.push('LOCATE(?, d.leader) > 0');
+        params.push(leader);
+    }
+
+    const whereSql = conditions.length
+        ? `WHERE ${conditions.join(' AND ')}`
+        : '';
+
+    const [list] = await pool.execute(
+        `SELECT
+            d.id,
+            d.name,
+            d.leader,
+            d.parent_id AS parentId,
+            p.name AS parentName,
+            DATE_FORMAT(d.created_at, '%Y-%m-%d %H:%i:%s') AS createAt,
+            DATE_FORMAT(d.updated_at, '%Y-%m-%d %H:%i:%s') AS updateAt
+         FROM departments AS d
+         LEFT JOIN departments AS p ON d.parent_id = p.id
+         ${whereSql}
+         ORDER BY d.id ASC
+         LIMIT ? OFFSET ?`,
+        [...params, String(size), String(offset)]
+    );
+
+    const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total
+         FROM departments AS d
+         ${whereSql}`,
+        params
+    );
+
+    return {
+        list,
+        totalCount: rows[0].total
+    };
+}
+
 
 module.exports = {
     findUsersList,
@@ -166,5 +219,7 @@ module.exports = {
     createUser,
     findUserById,
     findRoleById,
-    findDepartmentById
+    findDepartmentById,
+    findDepartmentPage
+    
 }
