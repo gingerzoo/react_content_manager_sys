@@ -59,6 +59,26 @@ const ChatWrap = styled(Card)`
     .message-item.user .message-bubble {
         background: #e8f7ef;
     }
+        
+    .history-alert {
+        width: 100%;
+        max-width: 560px;
+        align-items: center;
+    }
+
+    .history-alert .ant-alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .history-alert .ant-alert-description {
+        overflow-wrap: anywhere;
+    }
+
+    .history-alert .ant-alert-action {
+        flex-shrink: 0;
+        margin-inline-start: 16px;
+    }
 
     .chat-composer {
         flex-shrink: 0;

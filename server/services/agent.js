@@ -33,7 +33,8 @@ async function createConversation(userId, title) {
     return { data: conversation };
 }
 
-async function sendMessage(userId, conversationId, content) {
+async function sendMessage(userId, conversationId, content, options = {}) {
+    const { signal, onStart, onDelta } = options;
     if (
         typeof content !== 'string' ||
         !content.trim() ||
@@ -76,21 +77,52 @@ async function sendMessage(userId, conversationId, content) {
             content: content.trim()
         };
 
-        const result = await deepseekService.generateReply([
+        const modelMessages = [
             {
                 role: 'system',
                 content:
                     '你是内容运营助手，请用中文回复。' +
+                    '默认简洁回答，用户明确要求详细说明时再展开。' +
                     '目前尚未接入文章查询和保存工具，' +
                     '不要声称已经查询数据库或保存文章。'
             },
             ...history,
             userMessage
-        ]);
+        ];
 
+        let result;
+
+        if (typeof onDelta === 'function') {
+            signal?.throwIfAborted();
+
+            await onStart?.();
+
+            let fullContent = '';
+
+            for await (
+                const text of deepseekService.generateReplyStream(
+                    modelMessages,
+                    { signal }
+                )
+            ) {
+                fullContent += text;
+                await onDelta(text);
+            }
+
+            result = {
+                data: {
+                    role: 'assistant',
+                    content: fullContent
+                }
+            };
+        } else {
+            result = await deepseekService.generateReply(modelMessages);
+        }
         if (result.error) {
             return result;
         }
+
+        signal?.throwIfAborted();
 
         await agentModel.saveExchange(
             conversationId,

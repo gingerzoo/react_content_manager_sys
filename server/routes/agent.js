@@ -25,4 +25,11 @@ router.get(
     agentController.getLatestConversation
 );
 
+router.post(
+    '/conversations/:id/messages/stream',
+    authMiddleware,
+    requireAdmin,
+    agentController.sendMessageStream
+);
+
 module.exports = router;
