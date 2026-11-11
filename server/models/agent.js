@@ -44,7 +44,8 @@ async function findRecentMessages(conversationId) {
 async function saveExchange(
     conversationId,
     userMessage,
-    assistantMessage
+    assistantMessage,
+    conversationTitle
 ) {
     const connection = await pool.getConnection();
 
@@ -64,9 +65,20 @@ async function saveExchange(
 
         await connection.execute(
             `UPDATE agent_conversations
-             SET updated_at = CURRENT_TIMESTAMP
-             WHERE id = ?`,
-            [conversationId]
+            SET
+                title = CASE
+                    WHEN title = '新对话'
+                        AND ? IS NOT NULL
+                    THEN ?
+                    ELSE title
+                END,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?`,
+            [
+                conversationTitle,
+                conversationTitle,
+                conversationId
+            ]
         );
 
         await connection.commit();
@@ -119,6 +131,35 @@ async function findConversationMessages(conversationId) {
         );
 }
 
+async function findConversationsByUser(userId) {
+    const [rows] = await pool.execute(
+        `SELECT
+            id,
+            title,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+         FROM agent_conversations
+         WHERE user_id = ?
+         ORDER BY updated_at DESC, id DESC`,
+        [userId]
+    );
+
+    return rows;
+}
+
+async function deleteConversationByUser(
+    conversationId,
+    userId
+) {
+    const [result] = await pool.execute(
+        `DELETE FROM agent_conversations
+         WHERE id = ? AND user_id = ?`,
+        [conversationId, userId]
+    );
+
+    return result.affectedRows > 0;
+}
+
 
 module.exports = {
     createConversation,
@@ -126,5 +167,7 @@ module.exports = {
     findRecentMessages,
     saveExchange,
     findLatestConversationByUser,
-    findConversationMessages
+    findConversationMessages,
+    findConversationsByUser,
+    deleteConversationByUser
 };

@@ -8,6 +8,7 @@ import PageHeader from '@/components/page-header/page-header';
 import { Outlet } from 'react-router-dom';
 import { fetchPageEntriesAction } from '@/store/modules/main/main';
 
+
 interface Iprops {
     children?: ReactNode;
 }

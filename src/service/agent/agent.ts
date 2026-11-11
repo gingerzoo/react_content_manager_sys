@@ -15,6 +15,29 @@ export interface StreamDoneData {
     };
 }
 
+export interface AgentConversationSummary {
+    id: number;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface ConversationListResponse {
+    code: number;
+    message: string;
+    data?: AgentConversationSummary[];
+}
+
+interface ConversationMessagesResponse {
+    code: number;
+    message: string;
+    data?: {
+        conversationId: number;
+        title: string;
+        messages: ChatMessage[];
+    };
+}
+
 interface StreamAgentMessageOptions {
     signal?: AbortSignal;
     onDelta: (text: string) => void;
@@ -49,6 +72,14 @@ interface LatestConversationResponse {
         title: string;
         messages: ChatMessage[];
     } | null;
+}
+
+interface DeleteConversationResponse {
+    code: number;
+    message: string;
+    data?: {
+        conversationId: number;
+    };
 }
 
 export function createAgentConversation(title = '新对话') {
@@ -256,4 +287,34 @@ export async function streamAgentMessage(
     }
 
     return doneData;
+}
+
+export function getAgentConversations(
+    signal?: AbortSignal
+) {
+    return lxRequest.request<ConversationListResponse>({
+        method: 'GET',
+        url: '/agent/conversations',
+        signal
+    });
+}
+
+export function getAgentConversationMessages(
+    conversationId: number,
+    signal?: AbortSignal
+) {
+    return lxRequest.request<ConversationMessagesResponse>({
+        method: 'GET',
+        url: `/agent/conversations/${conversationId}/messages`,
+        signal
+    });
+}
+
+export function deleteAgentConversation(
+    conversationId: number
+) {
+    return lxRequest.request<DeleteConversationResponse>({
+        method: 'DELETE',
+        url: `/agent/conversations/${conversationId}`
+    });
 }

@@ -11,14 +11,17 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
     "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.26.6",
     "axios": "^1.9.0",
     "dotenv": "^17.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.6.0"
+    "react-router-dom": "^7.6.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

@@ -1,5 +1,7 @@
 const agentModel = require('../models/agent');
 const deepseekService = require('./deepseek');
+const DEFAULT_CONVERSATION_TITLE = '新对话';
+const MAX_CONVERSATION_TITLE_LENGTH = 50;
 
 // 当前单 Node 进程内，同一会话一次只处理一条消息。
 const processingConversations = new Set();
@@ -72,6 +74,11 @@ async function sendMessage(userId, conversationId, content, options = {}) {
         const history =
             await agentModel.findRecentMessages(conversationId);
 
+        const conversationTitle =
+        history.length === 0
+            ? buildConversationTitle(content)
+            : null;
+
         const userMessage = {
             role: 'user',
             content: content.trim()
@@ -127,7 +134,8 @@ async function sendMessage(userId, conversationId, content, options = {}) {
         await agentModel.saveExchange(
             conversationId,
             userMessage,
-            result.data
+            result.data,
+            conversationTitle
         );
 
         return {
@@ -163,10 +171,117 @@ async function getLatestConversation(userId) {
     };
 }
 
+async function getConversations(userId) {
+    const conversations =
+        await agentModel.findConversationsByUser(userId);
 
+    return {
+        data: conversations
+    };
+}
+
+async function getConversationMessages(
+    userId,
+    conversationId
+) {
+    const conversation =
+        await agentModel.findConversationByUser(
+            conversationId,
+            userId
+        );
+
+    if (!conversation) {
+        return {
+            status: 404,
+            error: '会话不存在或无权访问'
+        };
+    }
+
+    const messages =
+        await agentModel.findConversationMessages(
+            conversationId
+        );
+
+    return {
+        data: {
+            conversationId: conversation.id,
+            title: conversation.title,
+            messages
+        }
+    };
+}
+
+function buildConversationTitle(content) {
+    const normalizedContent =
+        content.replace(/\s+/g, ' ').trim();
+
+    const characters = Array.from(
+        normalizedContent
+    );
+
+    if (
+        characters.length <=
+        MAX_CONVERSATION_TITLE_LENGTH
+    ) {
+        return normalizedContent;
+    }
+
+    return (
+        characters
+            .slice(
+                0,
+                MAX_CONVERSATION_TITLE_LENGTH - 1
+            )
+            .join('') + '…'
+    );
+}
+
+async function deleteConversation(
+    userId,
+    conversationId
+) {
+    if (
+        processingConversations.has(conversationId)
+    ) {
+        return {
+            status: 409,
+            error: '当前会话正在回复，暂时无法删除'
+        };
+    }
+
+    processingConversations.add(conversationId);
+
+    try {
+        const deleted =
+            await agentModel.deleteConversationByUser(
+                conversationId,
+                userId
+            );
+
+        if (!deleted) {
+            return {
+                status: 404,
+                error: '会话不存在或无权删除'
+            };
+        }
+
+        return {
+            data: {
+                conversationId
+            }
+        };
+    } finally {
+        processingConversations.delete(
+            conversationId
+        );
+    }
+}
 
 module.exports = {
     createConversation,
     sendMessage,
-    getLatestConversation
+    getLatestConversation,
+    getConversations,
+    getConversationMessages,
+    deleteConversation
 };

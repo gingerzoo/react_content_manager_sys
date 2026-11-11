@@ -228,10 +228,106 @@ async function getLatestConversation(req, res, next) {
     }
 }
 
+async function getConversations(req, res, next) {
+    try {
+        const result =
+            await agentService.getConversations(
+                req.user.id
+            );
+
+        return res.json({
+            code: 200,
+            message: '获取会话列表成功',
+            data: result.data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function getConversationMessages(req, res, next) {
+    try {
+        const conversationId = Number(req.params.id);
+
+        if (
+            !Number.isSafeInteger(conversationId) ||
+            conversationId <= 0 ||
+            conversationId > 2147483647
+        ) {
+            return res.status(400).json({
+                code: 400,
+                message: '会话 ID 不正确'
+            });
+        }
+
+        const result =
+            await agentService.getConversationMessages(
+                req.user.id,
+                conversationId
+            );
+
+        if (result.error) {
+            return res.status(result.status).json({
+                code: result.status,
+                message: result.error
+            });
+        }
+
+        return res.json({
+            code: 200,
+            message: '获取会话消息成功',
+            data: result.data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function deleteConversation(req, res, next) {
+    try {
+        const conversationId = Number(req.params.id);
+
+        if (
+            !Number.isSafeInteger(conversationId) ||
+            conversationId <= 0 ||
+            conversationId > 2147483647
+        ) {
+            return res.status(400).json({
+                code: 400,
+                message: '会话 ID 不正确'
+            });
+        }
+
+        const result =
+            await agentService.deleteConversation(
+                req.user.id,
+                conversationId
+            );
+
+        if (result.error) {
+            return res.status(result.status).json({
+                code: result.status,
+                message: result.error
+            });
+        }
+
+        return res.json({
+            code: 200,
+            message: '删除会话成功',
+            data: result.data
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
 
 module.exports = {
     createConversation,
     sendMessage,
     sendMessageStream,
-    getLatestConversation
+    getLatestConversation,
+    getConversations,
+    getConversationMessages,
+    deleteConversation
 };
