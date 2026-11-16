@@ -47,6 +47,12 @@ type ListStatus =
     | 'ready'
     | 'error';
 
+/**
+ * 将接口时间转为用户本地时区的简短日期时间；非法值返回空文本。
+ *
+ * @param {string} value - 接口返回的日期时间字符串。
+ * @returns {string} 本地时区的月日时分；无法解析时返回空字符串。
+ */
 function formatConversationTime(value: string) {
     const date = new Date(value);
 
@@ -63,42 +69,67 @@ function formatConversationTime(value: string) {
     }).format(date);
 }
 
+/**
+ * 历史会话入口：内部管理悬浮、列表请求与确认弹窗；选择和删除交由父页面处理。
+ *
+ * @param {ConversationDropdownProps} props - 由父页面传入的状态和操作回调。
+ * @param {number | null} props.currentConversationId - 当前会话 ID，用于高亮。
+ * @param {boolean} props.disabled - 父页面繁忙时禁用入口并收起面板。
+ * @param {(conversationId: number) => (void | Promise<void>)} props.onSelect - 通知父页面加载所选会话。
+ * @param {(conversationId: number) => Promise<boolean>} props.onDelete - 请求父页面删除，成功返回 true。
+ * @returns {import("react").ReactElement} 历史图标按钮及其受控下拉面板。
+ */
 const ConversationDropdown = ({
     currentConversationId,
     disabled,
     onSelect,
     onDelete
 }: ConversationDropdownProps) => {
+    // 历史面板是否展开，与父页面的聊天会话状态独立。
     const [open, setOpen] = useState(false);
 
+    // 仅保存会话摘要，不包含完整消息。
     const [conversations, setConversations] =
         useState<AgentConversationSummary[]>([]);
 
+    // 列表自身的 idle/loading/ready/error，与聊天页历史恢复状态分离。
     const [status, setStatus] =
         useState<ListStatus>('idle');
 
+    // 列表请求失败提示，渲染重试入口。
     const [errorMessage, setErrorMessage] =
         useState('');
 
+    // 列表请求同步锁，state 尚未渲染时也能阻止重复调用。
     const loadingRef = useRef(false);
 
+    // 摘要列表请求控制器，与聊天页的流式、会话详情及分页请求分别管理。
     const requestControllerRef =
         useRef<AbortController | null>(null);
 
     const { modal } = AntdApp.useApp();
 
+    // 卸载时取消摘要请求，避免继续等待已不需要的数据。
     useEffect(() => {
         return () => {
             requestControllerRef.current?.abort();
         };
     }, []);
 
+    // 父页面繁忙时收起浮层，避免继续切换或打开操作入口。
     useEffect(() => {
         if (disabled) {
             setOpen(false);
         }
     }, [disabled]);
 
+    /**
+     * 打开面板或点击刷新时重取摘要，以同步新标题、删除结果和更新时间排序。
+     * 同步锁防止反复悬浮产生重叠请求；卸载时可取消。
+     *
+     * 无入参；所需上下文从闭包或模块作用域读取。
+     * @returns {Promise<void>} 操作结束后兑现；业务错误由函数内部处理并更新提示。
+     */
     const loadConversations = async () => {
         if (loadingRef.current) return;
 
@@ -173,6 +204,12 @@ const ConversationDropdown = ({
         }
     };
 
+    /**
+     * 更新受控浮层开关，打开时刷新列表；关闭不清空已加载数据。
+     *
+     * @param {boolean} nextOpen - 浮层希望切换到的展开状态。
+     * @returns {void} 不返回业务值，通过状态更新或 DOM 操作完成处理。
+     */
     const handleOpenChange = (nextOpen: boolean) => {
         setOpen(nextOpen);
 
@@ -181,6 +218,12 @@ const ConversationDropdown = ({
         }
     };
 
+    /**
+     * 先关闭浮层；点击当前会话无需重复加载，其他会话通过回调通知父页面。
+     *
+     * @param {number} selectedConversationId - 点击条目的会话 ID。
+     * @returns {void} 不返回业务值，通过状态更新或 DOM 操作完成处理。
+     */
     const handleSelect = (
         selectedConversationId: number
     ) => {
@@ -196,6 +239,13 @@ const ConversationDropdown = ({
         void onSelect(selectedConversationId);
     };
 
+    /**
+     * 关闭 hover 面板后打开独立确认弹窗，避免鼠标移出导致确认入口卸载。
+     * 父组件返回 true 后才移除摘要；返回 false 时保留条目，错误由父组件提示。
+     *
+     * @param {AgentConversationSummary} conversation - 待删除会话摘要，用于 ID 和确认文案。
+     * @returns {void} 打开确认弹窗；实际删除由 onOk 异步回调执行。
+     */
     const handleRequestDelete = (
         conversation: AgentConversationSummary
     ) => {
@@ -211,6 +261,12 @@ const ConversationDropdown = ({
                 danger: true
             },
 
+            /**
+             * 返回 Promise 让确认按钮等待异步删除；false 不移除本地条目。
+             *
+             * 无入参；所需上下文从闭包或模块作用域读取。
+             * @returns {Promise<void>} 等待父页面删除；成功时移除摘要，返回 false 则保留条目。
+             */
             onOk: async () => {
                 const deleted =
                     await onDelete(conversation.id);
@@ -228,6 +284,7 @@ const ConversationDropdown = ({
     };
 
 
+    // 自定义面板包含加载、失败、空列表和会话列表；由独立 styled 组件提供浮层样式。
     const panel = (
         <ConversationDropdownPanel>
             <div className='conversation-dropdown-header'>

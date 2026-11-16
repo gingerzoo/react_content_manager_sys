@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { Card } from 'antd';
 
+// 聊天页卡片样式：通过 flex 和 min-height:0 让消息区域独立滚动，输入区保留在下方。
 const ChatWrap = styled(Card)`
     width: 100%;
     height: 100%;
@@ -22,11 +23,23 @@ const ChatWrap = styled(Card)`
         padding-bottom: 12px;
     }
 
+    /* 固定状态栏高度，避免加载提示与重试按钮互换时造成消息位置变化。 */
+    .older-history-bar {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    /* 真实滚动容器；关闭浏览器自动锚定并立即滚动，由页面 useLayoutEffect 负责位置补偿。 */
     .message-list {
         height: 100%;
         min-height: 0;
         overflow-y: auto;
         padding: 12px 0;
+        overflow-anchor: none;
+        scroll-behavior: auto;
     }
 
     .empty-state {
@@ -36,6 +49,7 @@ const ChatWrap = styled(Card)`
         justify-content: center;
     }
 
+    /* 为返回底部浮动按钮提供定位参照；按钮不占消息列表布局空间。 */
     .message-area {
         position: relative;
         flex: 1;
@@ -54,6 +68,7 @@ const ChatWrap = styled(Card)`
         align-items: flex-end;
     }
 
+    /* 普通用户文本保留换行；长单词可断行，防止撑宽页面。 */
     .message-bubble {
         max-width: 85%;
         padding: 12px 16px;
@@ -67,6 +82,7 @@ const ChatWrap = styled(Card)`
         background: #e8f7ef;
     }
     
+    /* Markdown 用段落和列表表达结构，覆盖普通气泡的 pre-wrap。 */
     .message-item.assistant .message-bubble {
         white-space: normal;
     }

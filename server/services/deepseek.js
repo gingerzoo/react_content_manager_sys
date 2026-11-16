@@ -1,7 +1,15 @@
 const { OpenAI } = require('openai');
 
+// 惰性创建并复用 SDK 客户端；密钥只从服务端环境变量读取，不能下发浏览器。
 let client;
 
+/**
+ * 调用 DeepSeek 非流式接口，返回完整助手消息或可展示的业务错误。
+ * 上游凭证错误映射为模型服务错误，不转发成本站登录 401。
+ *
+ * @param {Array<{role: 'user' | 'assistant', content: string} | {role: 'system', content: string}>} messages - 系统指令、历史上下文与本轮问题，按对话顺序排列。
+ * @returns {Promise<{data: {role: 'user' | 'assistant', content: string}} | {status: number, error: string}>} 完整助手消息，或 503/502/504 等模型服务业务错误。
+ */
 async function generateReply(messages) {
     const apiKey = process.env.DEEPSEEK_API_KEY;
 
@@ -18,6 +26,7 @@ async function generateReply(messages) {
                 apiKey,
                 baseURL: 'https://api.deepseek.com',
                 timeout: 30000,
+                // 禁止 SDK 自动重试，由用户决定是否重新发送，避免隐式重复付费调用。
                 maxRetries: 0
             });
         }
@@ -81,6 +90,17 @@ async function generateReply(messages) {
     }
 }
 
+/**
+ * 异步生成器：yield 每段 delta.content，signal 传到 SDK 取消上游请求。
+ * 只允许 stop 且有有效文本的完整结束；截断或异常结束抛错，阻止保存部分问答。
+ *
+ * @param {Array<{role: 'user' | 'assistant', content: string} | {role: 'system', content: string}>} messages - 发送给模型的有序上下文。
+ * @param {Object} [options={}] - 解构的可选请求配置。
+ * @param {AbortSignal} [options.signal] - 传给 SDK 的取消信号。
+ * @returns {AsyncGenerator<string, void, unknown>} 异步生成器对象；迭代时逐段产出回复，正常结束无返回数据。
+ * @yields {string} 原样保留空白的增量文本片段。
+ * @throws {Error} 缺少密钥、调用失败、取消、截断或非正常结束时抛出。
+ */
 async function* generateReplyStream(
     messages,
     { signal } = {}
@@ -111,12 +131,15 @@ async function* generateReplyStream(
         { signal }
     );
 
+    // 流中先收到文本、最后才确认完成原因；已经 yield 的片段不代表业务保存成功。
     let finishReason = null;
+    // 检测至少一个非空白片段；仍原样输出空白，保留 Markdown 和代码格式。
     let hasText = false;
 
     for await (const chunk of stream) {
         const choice = chunk.choices[0];
 
+        // 某些分块可能不包含 choices 文本（例如统计信息），跳过即可。
         if (!choice) continue;
 
         if (choice.finish_reason) {

@@ -1,3 +1,4 @@
+// 手动付费流式测试：直接迭代服务端生成器，不经过浏览器或 Express。
 const path = require('node:path');
 
 require('dotenv').config({
@@ -9,6 +10,13 @@ const {
     generateReplyStream
 } = require('../services/deepseek');
 
+/**
+ * 建立最多等待 60 秒的流式请求，逐段写到终端；正常结束后输出完成标记。
+ *
+ * 无入参；所需上下文从闭包或模块作用域读取。
+ * @returns {Promise<void>} 手动调用完成并输出结果；不返回数据。
+ * @throws {Error} 模型调用或生成失败时交给脚本入口 catch 处理。
+ */
 async function main() {
     const messages = [
         {

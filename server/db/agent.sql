@@ -1,3 +1,4 @@
+-- 内容助手会话与消息表；外键限制所属用户存在，删除会话时级联删除消息。
 USE my_project;
 
 CREATE TABLE IF NOT EXISTS agent_conversations (

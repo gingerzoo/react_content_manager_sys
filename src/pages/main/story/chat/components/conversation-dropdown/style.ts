@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 
+// 独立浮层样式：Dropdown 默认挂载到 body，不能依赖 ChatWrap 后代选择器。
 const ConversationDropdownPanel = styled.div`
     width: 320px;
     padding: 8px;
@@ -17,6 +18,7 @@ const ConversationDropdownPanel = styled.div`
         border-bottom: 1px solid #f0f0f0;
     }
 
+    /* 超过最大高度后仅列表内部滚动，面板标题保持可见。 */
     .conversation-dropdown-list {
         max-height: 320px;
         overflow-y: auto;
@@ -73,6 +75,7 @@ const ConversationDropdownPanel = styled.div`
         font-size: 12px;
     }
 
+    /* 选择按钮和删除按钮互为兄弟，避免 HTML 中 button 嵌套 button。 */
     .conversation-select-button {
         min-width: 0;
         min-height: 48px;

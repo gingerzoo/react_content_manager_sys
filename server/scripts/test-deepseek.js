@@ -1,3 +1,4 @@
+// 手动付费连通性测试：只发一条短请求，不执行数据库操作。
 const path = require('node:path');
 const { OpenAI } = require('openai');
 
@@ -20,6 +21,13 @@ const client = new OpenAI({
     maxRetries: 0
 });
 
+/**
+ * 调用一次非流式模型，输出回复和 token 用量；错误由入口 catch 处理。
+ *
+ * 无入参；所需上下文从闭包或模块作用域读取。
+ * @returns {Promise<void>} 手动调用完成并输出结果；不返回数据。
+ * @throws {Error} 模型调用或生成失败时交给脚本入口 catch 处理。
+ */
 async function main() {
     const response = await client.chat.completions.create({
         model: 'deepseek-flash',
