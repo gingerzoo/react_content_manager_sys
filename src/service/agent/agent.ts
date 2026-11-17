@@ -47,11 +47,22 @@ interface ConversationMessagesResponse {
     data?: ConversationMessagesPage
 }
 
+export interface AgentToolStatus {
+    phase: 'running' | 'completed';
+    name: string;
+}
+
 
 // signal 控制取消；onDelta 是增量文本回调，不负责确认问答已入库。
 interface StreamAgentMessageOptions {
     signal?: AbortSignal;
     onDelta: (text: string) => void;
+
+    onRoundStart?: (round: number) => void;
+
+    onToolStatus?: (
+        status: AgentToolStatus
+    ) => void;
 }
 
 interface CreateConversationResponse {
@@ -246,6 +257,44 @@ export async function streamAgentMessage(
             payload === null
         ) {
             throw new Error('流式响应格式不正确');
+        }
+
+        if (eventName === 'round_start') {
+            const round = Reflect.get(payload, 'round');
+
+            if (
+                typeof round !== 'number' ||
+                !Number.isSafeInteger(round) ||
+                round <= 0
+            ) {
+                throw new Error('模型轮次格式不正确');
+            }
+
+            options.onRoundStart?.(round);
+            return;
+        }
+
+        if (eventName === 'tool_status') {
+            const phase = Reflect.get(payload, 'phase');
+            const name = Reflect.get(payload, 'name');
+
+            if (
+                (
+                    phase !== 'running' &&
+                    phase !== 'completed'
+                ) ||
+                typeof name !== 'string' ||
+                !name.trim()
+            ) {
+                throw new Error('工具状态格式不正确');
+            }
+
+            options.onToolStatus?.({
+                phase,
+                name
+            });
+
+            return;
         }
 
         if (eventName === 'delta') {

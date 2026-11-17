@@ -1,5 +1,7 @@
 const agentModel = require('../models/agent');
-const deepseekService = require('./deepseek');
+const {
+    runAgentStream
+} = require('../agent/run-agent');
 const MAX_CONVERSATION_TITLE_LENGTH = 50;
 
 // UI 每页消息数量（不是问答轮数）；独立于模型上下文的最近 20 条。
@@ -56,11 +58,24 @@ async function createConversation(userId, title) {
  * @param {AbortSignal} [options.signal] - 上游取消信号，在生成和入库前检查。
  * @param {() => (void | Promise<void>)} [options.onStart] - 前置校验完成后、生成前调用，供 Controller 开启 SSE。
  * @param {(text: string) => (void | Promise<void>)} [options.onDelta] - 转发片段的回调，可等待下游背压。
+ *  @param {(round: number) => (void | Promise<void>)}
+ * [options.onRoundStart] - 每轮模型请求开始前通知。
+ * @param {(status: {
+ *   phase: 'running' | 'completed',
+ *   name: string
+ * }) => (void | Promise<void>)}
+ * [options.onToolStatus] - 工具执行状态通知。
  * @returns {Promise<{data: {conversationId: number, message: {role: 'user' | 'assistant', content: string}}} | {status: number, error: string}>} 完整保存后的回复结果，或校验/非流式模型返回的业务错误。
  * @throws {Error} 流式生成、取消或数据库保存异常向上传播，finally 释放进程内锁。
  */
 async function sendMessage(userId, conversationId, content, options = {}) {
-    const { signal, onStart, onDelta } = options;
+    const { 
+        signal, 
+        onStart, 
+        onDelta,
+        onRoundStart,
+        onToolStatus
+    } = options;
     if (
         typeof content !== 'string' ||
         !content.trim() ||
@@ -110,54 +125,27 @@ async function sendMessage(userId, conversationId, content, options = {}) {
             content: content.trim()
         };
 
-        const modelMessages = [
-            {
-                role: 'system',
-                content:
-                    '你是内容运营助手，请用中文回复。' +
-                    '默认简洁回答，用户明确要求详细说明时再展开。' +
-                    '目前尚未接入文章查询和保存工具，' +
-                    '不要声称已经查询数据库或保存文章。'
-            },
-            ...history,
-            userMessage
-        ];
+        signal?.throwIfAborted();
 
-        let result;
-
+        // 业务参数、归属和历史读取均已成功后，再开启 SSE。
         if (typeof onDelta === 'function') {
-            // 取消是协作式的：开始生成前主动检查；signal 缺省时兼容普通非流式调用。
-            // 入库前再检查取消；不能撤销已经开始或已提交的数据库事务。
-            signal?.throwIfAborted();
-
-            // 参数、归属和历史读取成功后才开启 SSE，业务校验错误仍能返回普通 HTTP JSON。
             await onStart?.();
+        }
 
-            let fullContent = '';
-
-            // 异步生成器逐段产出文字；既累计完整回复供入库，也将片段及时转发给客户端。
-            for await (
-                const text of deepseekService.generateReplyStream(
-                    modelMessages,
-                    { signal }
-                )
-            ) {
-                fullContent += text;
-                await onDelta(text);
+        const agentResult = await runAgentStream(
+            userMessage.content,
+            {
+                history,
+                signal,
+                onRoundStart,
+                onDelta,
+                onToolStatus
             }
+        );
 
-            result = {
-                data: {
-                    role: 'assistant',
-                    content: fullContent
-                }
-            };
-        } else {
-            result = await deepseekService.generateReply(modelMessages);
-        }
-        if (result.error) {
-            return result;
-        }
+        const result = {
+            data: agentResult.message
+        };
 
         signal?.throwIfAborted();
 

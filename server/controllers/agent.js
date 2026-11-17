@@ -210,9 +210,29 @@ async function sendMessageStream(req, res, next) {
                  * @returns {Promise<void>} delta 事件完成写入和背压等待后兑现。
                  */
                 onDelta: text =>
-                    writeEvent('delta', { text })
-            }
-        );
+                    writeEvent('delta', { text }),
+                /**
+                 * 通知客户端开始新一轮模型请求。
+                 *
+                 * @param {number} round - 从 1 开始的模型请求轮次。
+                 * @returns {Promise<void>} 事件写入完成后兑现。
+                 */
+                onRoundStart: round =>
+                    writeEvent('round_start', { round }),
+
+                /**
+                 * 转发工具执行状态，不包含原始查询结果。
+                 *
+                 * @param {{
+                 *   phase: 'running' | 'completed',
+                 *   name: string
+                 * }} status - 当前工具执行状态。
+                 * @returns {Promise<void>} 事件写入完成后兑现。
+                 */
+                onToolStatus: status =>
+                    writeEvent('tool_status', status)
+                            }
+                        );
 
         // 参数、会话归属等错误发生在开始流之前。
         if (result.error) {

@@ -111,6 +111,10 @@ const Chat = () => {
     const [olderHistoryError, setOlderHistoryError] =
         useState('');
 
+    // Agent 当前的可见进度，不作为正式消息保存。
+    const [agentProgress, setAgentProgress] =
+        useState('');
+
     // 当前历史分页控制器，同时充当同步请求锁和响应身份标记。
     const olderHistoryControllerRef =
         useRef<AbortController | null>(null);
@@ -678,6 +682,7 @@ const Chat = () => {
         setPendingContent(content);
         setPendingReply('');
         setStreamError('');
+        setAgentProgress('正在处理问题……');
 
         try {
             const result = await streamAgentMessage(
@@ -698,6 +703,44 @@ const Chat = () => {
                         setPendingReply(previous =>
                             previous + text
                         );
+                    },
+                    /**
+                     * 新一轮模型请求开始，清除上一轮过程文字。
+                     *
+                     * @param {number} round - 当前模型请求轮次。
+                     * @returns {void} 更新临时气泡与进度。
+                     */
+                    onRoundStart: round => {
+                        if (controller.signal.aborted) return;
+
+                        setPendingReply('');
+
+                        setAgentProgress(
+                            round === 1
+                                ? '正在分析问题……'
+                                : '正在根据查询结果生成回答……'
+                        );
+                    },
+
+                    /**
+                     * 将协议状态转换为用户能理解的进度文案。
+                     *
+                     * @param {import('@/service/agent/agent').AgentToolStatus}
+                     * status - 工具执行阶段与名称。
+                     * @returns {void} 只更新进度，不保存正式消息。
+                     */
+                    onToolStatus: status => {
+                        if (controller.signal.aborted) return;
+
+                        if (status.name === 'searchContents') {
+                            setAgentProgress(
+                                status.phase === 'running'
+                                    ? '正在搜索已发布文章……'
+                                    : '搜索执行结束，正在继续处理……'
+                            );
+                        } else {
+                            setAgentProgress('正在处理工具结果……');
+                        }
                     }
                 }
             );
@@ -767,6 +810,7 @@ const Chat = () => {
 
             sendingRef.current = false;
             setSending(false);
+            setAgentProgress('');
         }
     };
 
@@ -1188,7 +1232,7 @@ const Chat = () => {
                                                 type={streamError ? 'danger' : 'secondary'}
                                             >
                                                 {sending
-                                                    ? '内容助手正在回复……'
+                                                    ? agentProgress || '内容助手正在回复……'
                                                     : streamError
                                                         ? '内容助手（回复未完成）'
                                                         : '内容助手'}
