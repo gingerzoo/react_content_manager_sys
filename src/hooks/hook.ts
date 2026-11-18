@@ -6,7 +6,7 @@ import { useState } from 'react';
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
 
-export function usePageModal<T = any>() {
+export function usePageModal() {
     // 控制Modal的开关
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     // 编辑数据

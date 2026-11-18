@@ -1,7 +1,7 @@
-import React, { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
-import { useAppDispatch, useAppSelector } from '@/hooks/hook';
-import { Layout, theme } from 'antd';
+import { useAppDispatch } from '@/hooks/hook';
+import { Layout } from 'antd';
 import MainWrap from './style';
 import SideMenu from '@/components/side-menu/side-menu';
 import PageHeader from '@/components/page-header/page-header';
@@ -13,7 +13,7 @@ interface Iprops {
     children?: ReactNode;
 }
 
-const Main: FC<Iprops> = props => {
+const Main: FC<Iprops> = () => {
     const { Sider, Content } = Layout;
     const [collapsed, setCollapsed] = useState(false);
     const dispatch = useAppDispatch();
@@ -23,7 +23,6 @@ const Main: FC<Iprops> = props => {
     // const {
     //     token: { colorBgContainer, borderRadiusLG }
     // } = theme.useToken();
-    const userMenus = JSON.parse(localStorage.getItem('userMenus') ?? '[]');
 
     const handleCollapsedBtnClick = () => {
         setCollapsed(!collapsed);

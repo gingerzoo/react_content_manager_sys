@@ -6,6 +6,7 @@ const LoginWrap = styled.div`
     top: 50%;
     transform: translate(-50%, -50%);
     width: 380px;
+    max-width: calc(100vw - 32px);
 
     .content {
         display: flex;
@@ -47,6 +48,13 @@ const LoginWrap = styled.div`
     }
 
     .bottom {
+        .register-entry {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 12px;
+            color: #666;
+        }
         .oper-box {
             display: flex;
             justify-content: space-between;

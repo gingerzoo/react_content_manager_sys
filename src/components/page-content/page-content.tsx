@@ -1,6 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Button, Table, Radio, Space, theme, App as AntdApp } from 'antd';
+import { Button, Table, Space, Tag, theme, App as AntdApp } from 'antd';
 import PageContentWrap from './style';
 import type { TableProps } from 'antd';
 import { FormOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -9,7 +9,6 @@ import { shallowEqual } from 'react-redux';
 import {
     fetchPageListAction,
     deleteItemByIdAction,
-    changePageSizeAction,
     changePaginationAction
 } from '@/store/modules/main/system/system';
 import type { IContentConfig } from '@/types/main';
@@ -18,7 +17,7 @@ import type { IContentConfig } from '@/types/main';
 interface Iprops {
     children?: ReactNode;
     contentConfig: IContentConfig;
-    handleModalOpen: () => void;
+    handleModalOpen: (isEdit?: boolean, record?: UserActionRecord) => void;
 }
 
 interface UserActionRecord {
@@ -28,19 +27,11 @@ interface UserActionRecord {
 }
 
 const PageContent: FC<Iprops> = props => {
-    type DataIndexKeys = (typeof contentConfig.tableItems)[number]['dataIndex'];
-
-    type IDataType = {
-        [K in DataIndexKeys]: string;
-    };
-
-    type DataType = IDataType & {
-        id: string;
-    };
-
     // rowSelection object indicates the need for row selection
     type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
-    const { contentConfig, handleModalOpen } = props;
+    const { contentConfig } = props;
+    // 按钮展示不能代替后端鉴权，写接口仍需独立检查管理员身份。
+    const canManage = useAppSelector(state => state.login.userInfo.roleId === 0);
     const { 
         pageList, 
         totalCount,
@@ -115,7 +106,7 @@ const PageContent: FC<Iprops> = props => {
         return col;
     });
 
-    columns.push({
+    if (canManage) columns.push({
         title: '操作',
         key: 'operation',
         align: 'center',
@@ -146,7 +137,7 @@ const PageContent: FC<Iprops> = props => {
         console.log('selectedRowKeys changed: ', newSelectedRowKeys);
         setSelectedRowKeys(newSelectedRowKeys);
     };
-    const rowSelection: TableRowSelection<DataType> = {
+    const rowSelection: TableRowSelection<UserActionRecord> = {
         selectedRowKeys,
         onChange: onSelectChange
     };
@@ -161,7 +152,7 @@ const PageContent: FC<Iprops> = props => {
     };
 
     const handleDeleteBtnClick = (record: UserActionRecord) => {
-        if (record.roleId === 0) return;
+        if (!canManage || record.roleId === 0) return;
         modal.confirm({
         title: '确认删除？',
         content: `删除“${record.username ?? record.id}”后无法恢复。`,
@@ -189,13 +180,14 @@ const PageContent: FC<Iprops> = props => {
     };
 
     const handleEditBtnClick = (record: UserActionRecord) => {
-        if (record.roleId === 0) return;
+        if (!canManage || record.roleId === 0) return;
         console.log('点击编辑按钮', record);
         // 把数据传给母组件
         props.handleModalOpen(true, record);
     };
 
     const handleCreateBtnClick = () => {
+        if (!canManage) return;
         props.handleModalOpen();
     };
 
@@ -203,15 +195,18 @@ const PageContent: FC<Iprops> = props => {
         <PageContentWrap $contentBgColor={colorBgContainer}>
             <div className='content-header'>
                 <h2>{contentConfig.header?.title}</h2>
+                {!canManage && <Tag>只读</Tag>}
+                {canManage && (
                 <Button size='large' type='primary' onClick={handleCreateBtnClick}>
                     {contentConfig.header?.btnTitle}
                 </Button>
+                )}
             </div>
-            <Table<DataType>
+            <Table<UserActionRecord>
                 rowKey='id'
                 columns={columns}
                 dataSource={pageList}
-                rowSelection={rowSelection}
+                rowSelection={canManage ? rowSelection : undefined}
                 pagination={{
                     position: ['bottomCenter'],
                     total: totalCount,

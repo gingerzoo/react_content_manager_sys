@@ -1,4 +1,4 @@
-import React, { Children, memo, useState, useEffect, useMemo, useCallback } from 'react';
+import { memo, useState, useEffect, useMemo, useCallback } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
@@ -51,9 +51,11 @@ const SideMenu: FC<Iprops> = props => {
 
     useEffect(() => {
         const defaultSelectedKeys = mapPathToMenu(location.pathname, userMenus);
-        if (defaultSelectedKeys) {
+        if (defaultSelectedKeys.length) {
             dispatch(changeSelectedKeysAction(defaultSelectedKeys));
             setOpenKeys([defaultSelectedKeys[1]]);
+        } else {
+            setOpenKeys([]);
         }
     }, [location.pathname, userMenus, dispatch]);
 
@@ -69,7 +71,7 @@ const SideMenu: FC<Iprops> = props => {
     // 优化点： 使用useMemo包裹这个menuItems
     const menuItems: MenuItem[] = useMemo(() => {
         return userMenus.map((menu, idx) => {
-            const children = menu.children.map(subMenu => {
+            const children =  (menu.children ?? []).map(subMenu => {
                 return {
                     key: subMenu.id + '',
                     label: subMenu.name,

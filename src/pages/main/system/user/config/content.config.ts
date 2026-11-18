@@ -1,6 +1,6 @@
-import type { IContentonfig } from '@/types/main';
+import type { IContentConfig } from '@/types/main';
 
-const contentConfig: IContentonfig = {
+const contentConfig: IContentConfig = {
     pageName: 'users',
     header: {
         title: '用户列表',

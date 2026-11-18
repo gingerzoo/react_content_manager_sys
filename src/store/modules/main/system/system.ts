@@ -16,7 +16,7 @@ interface Iquery {
     userId?: number;
 }
 
-interface UserSearchConditions {
+export interface UserSearchConditions {
     username: string;
     realname: string;
     cellphone: string;

@@ -1,4 +1,4 @@
-import React, { Children, memo } from 'react';
+import { memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { ISearchConfig } from '@/types/index';
 import { Button, Form, Input, Select, DatePicker, theme } from 'antd';
@@ -21,7 +21,7 @@ const PageSearch: FC<Iprops> = props => {
         if (item.type === 'input') {
             return <Input placeholder={item.placeholder} />;
         } else if (item.type === 'createAt') {
-            return <RangePicker style={{ width: '100%' }}/>;
+            return <RangePicker placeholder={['开始日期', '结束日期']} />;
         } else if (item.type === 'select') {
             return (
                 <Select placeholder={item.placeholder}>
@@ -91,8 +91,6 @@ const PageSearch: FC<Iprops> = props => {
             <Form 
                 form={form} 
                 layout='horizontal'
-                labelCol={{ flex: '84px' }}
-                wrapperCol={{ flex: 1 }}
                 labelWrap
             >
                 {props.searchConfig.formItems &&

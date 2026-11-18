@@ -1,5 +1,6 @@
-import React, { forwardRef, memo, useImperativeHandle } from 'react';
-import type { FC, ReactNode } from 'react';
+import { forwardRef, memo, useImperativeHandle } from 'react';
+import type { ReactNode } from 'react';
+import type { Iaccount } from '@/types/login';
 import { Form, Input } from 'antd';
 
 interface Iprops {
@@ -7,22 +8,19 @@ interface Iprops {
     onFieldsChange: () => void;
 }
 
-type FieldType = {
-    username?: string;
-    password?: string;
-};
+type FieldType = Iaccount;
 
 // 定义给父组件用的ref类型接口
 export interface AccountLoginRef {
     getFormValues: () => FieldType;
     validate: () => Promise<FieldType>;
-    setFormValues: (data: FieldType) => void;
+    setFormValues: (data: Partial<FieldType>) => void;
     isValid: () => Boolean;
 }
 
 const AccountLogin = forwardRef<AccountLoginRef, Iprops>((props, ref) => {
     const { onFieldsChange } = props;
-    const [form] = Form.useForm();
+    const [form] = Form.useForm<FieldType>();
 
     // 用于判断账号密码是否都非空
     const isValid = () => {
@@ -33,7 +31,7 @@ const AccountLogin = forwardRef<AccountLoginRef, Iprops>((props, ref) => {
     useImperativeHandle(ref, () => ({
         getFormValues: () => form.getFieldsValue(),
         validate: () => form.validateFields(),
-        setFormValues: (data: FieldType) => form.setFieldsValue(data),
+        setFormValues: (data: Partial<FieldType>) => form.setFieldsValue(data),
         isValid
     }));
 

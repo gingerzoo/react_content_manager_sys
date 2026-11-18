@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 interface IOption {
     label: string;
     value: string;
@@ -16,14 +18,21 @@ interface IFormItem {
     initialValue?: string;
     options?: IOption[];
 }
-
 interface ITableItem {
     title: string;
     dataIndex?: string;
     key?: string;
     width?: string;
-    align?: string;
-    render?: (any, any) => any;
+
+    // 限制为 Ant Design 支持的对齐方式。
+    align?: 'left' | 'center' | 'right';
+
+    // 通用表格单元格渲染函数。
+    render?: (
+        value: any,
+        record: any,
+        index: number
+    ) => ReactNode;
 }
 
 export interface ISearchConfig {

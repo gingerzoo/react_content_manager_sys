@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getPageMenus, getPageDepartments, getPageRoles } from '@/service/main/main';
 
-interface Istate {
+export interface Istate {
     selectedKeys: string[];
     pageRoles: any[];
     pageDepartments: any[];

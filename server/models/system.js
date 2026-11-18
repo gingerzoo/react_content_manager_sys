@@ -100,14 +100,12 @@ async function findUsersCount(filters = {}) {
 
 async function findDepartmentList() {
      const [rows] = await pool.execute('SELECT id, name FROM departments');
-     console.log("findDepartmentList--------rows",rows)
    return rows
 }
 
 
 async function findMenuList() {
      const [rows] = await pool.execute('SELECT * FROM menus');
-     console.log("findMenuList--------rows",rows)
 
 
    return rows;
@@ -115,7 +113,6 @@ async function findMenuList() {
 
 async function findRoleList() {
      const [rows] = await pool.execute('SELECT id, name FROM roles');
-     console.log("findRoleList--------rows",rows)
 
 
    return rows;

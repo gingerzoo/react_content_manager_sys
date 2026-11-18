@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { FormProps } from 'antd';
 import { Form, Input, Button } from 'antd';
@@ -20,7 +20,7 @@ const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = errorInfo => {
     console.log('Failed:', errorInfo);
 };
 
-const PhoneLogin: FC<Iprops> = props => {
+const PhoneLogin: FC<Iprops> = () => {
     return (
         <div>
             <Form

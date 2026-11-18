@@ -1,7 +1,8 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import type { ReactElement } from 'react';
 
 interface IProps {
-    children: JSX.Element;
+    children: ReactElement;
 }
 
 const AuthRouter = ({ children }: IProps) => {

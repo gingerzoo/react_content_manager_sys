@@ -738,7 +738,12 @@ const Chat = () => {
                                     ? '正在搜索已发布文章……'
                                     : '搜索执行结束，正在继续处理……'
                             );
-                        } else {
+                        } else if (status.name === 'getContent') {
+                            setAgentProgress(
+                                status.phase === 'running'
+                                    ? '正在读取文章正文……'
+                                    : '正文读取结束，正在继续处理……'
+                            );} else {
                             setAgentProgress('正在处理工具结果……');
                         }
                     }

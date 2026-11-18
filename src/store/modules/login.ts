@@ -3,8 +3,41 @@ import { getAccountLogin, getUserInfoById, getCurrentUserMenus } from '@/service
 import type { Iaccount } from '@/types';
 import axios from 'axios';
 import { clearLoginStorage } from '@/utils/session';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
-const initialState = {
+/**
+ * 当前登录用户的基本信息。
+ * 初始和退出登录时使用空对象，因此字段允许暂时缺省。
+ */
+interface LoginUserInfo {
+    id?: number;
+    username?: string;
+    realname?: string;
+    cellphone?: string;
+    enable?: number;
+    roleId?: number | null;
+    departmentId?: number | null;
+}
+
+/**
+ * 服务端返回的菜单节点。
+ * 叶子菜单可以不包含 children。
+ */
+interface LoginMenu {
+    id: number;
+    name: string;
+    url: string;
+    parent_id?: number | null;
+    children?: LoginMenu[];
+}
+
+export interface LoginState {
+    token: string;
+    userInfo: LoginUserInfo;
+    userMenus: LoginMenu[];
+}
+
+const initialState: LoginState = {
     token: localStorage.getItem('token') ?? '',
     userInfo: {},
     userMenus: []
@@ -97,13 +130,13 @@ const loginStore = createSlice({
     name: 'login',
     initialState,
     reducers: {
-        changeUserTokenAction(state, action: any) {
+        changeUserTokenAction(state, action: PayloadAction<string>) {
             state.token = action.payload;
         },
-        changeUserInfoAction(state, action: any) {
+        changeUserInfoAction(state, action: PayloadAction<LoginUserInfo>) {
             state.userInfo = action.payload;
         },
-        changeUserMenusAction(state, action: any) {
+        changeUserMenusAction(state, action: PayloadAction<LoginMenu[]>) {
             state.userMenus = action.payload;
         }
     }

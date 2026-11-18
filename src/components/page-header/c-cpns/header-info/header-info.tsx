@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import { memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import HeaderInfoWrap from './style';
 import { useAppSelector } from '@/hooks/hook';
@@ -13,13 +13,13 @@ import {
     UnlockOutlined
 } from '@ant-design/icons';
 import { Dropdown, Space } from 'antd';
-import type { MenuProps, DropdownProps } from 'antd';
+import type { MenuProps } from 'antd';
 
 interface Iprops {
     children?: ReactNode;
 }
 
-const HeaderInfo: FC<Iprops> = props => {
+const HeaderInfo: FC<Iprops> = () => {
     const username = useAppSelector(
         state => state.login.userInfo.username
     );

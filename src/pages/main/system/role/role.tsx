@@ -1,12 +1,9 @@
-import React, { memo } from 'react';
-import type { FC, ReactNode } from 'react';
+import OrganizationManagement from '@/components/organization-management';
 
-interface Iprops {
-    children?: ReactNode;
+/**
+ * 展示角色及菜单授权管理，非管理员只读。
+ * @returns {import('react').ReactElement} 角色管理页面。
+ */
+export default function Role() {
+    return <OrganizationManagement key='role' kind='role' />;
 }
-
-const Role: FC<Iprops> = props => {
-    return <div>Role</div>;
-};
-
-export default memo(Role);

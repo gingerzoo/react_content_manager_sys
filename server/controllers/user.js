@@ -1,4 +1,20 @@
 const userService = require('../services/user');
+
+/**
+ * 根据已验证 JWT 读取本人信息，不接受客户端提供的用户 ID。
+ * @param {import('express').Request} req - 已认证请求。
+ * @param {import('express').Response} res - JSON 响应。
+ * @param {import('express').NextFunction} next - 异常处理器。
+ * @returns {Promise<void>} 返回当前账号信息。
+ */
+async function getCurrentUser(req, res, next) {
+    try {
+        const user = await userService.getUserById(req.user.id);
+        res.json({ code: 200, message: '获取当前用户成功', data: user });
+    } catch (error) {
+        next(error);
+    }
+}
 async function getUserInfo(req, res, next) {
     const userId = req.params.id;
     try {
@@ -23,7 +39,6 @@ async function getUserInfo(req, res, next) {
 
 async function getMenus(req, res, next) {
     try {
-        console.log("获取菜单-----------",req)
 
         // authMiddleware 校验 token 后，将载荷放在 req.user 中。
         const userId = req.user.id;
@@ -44,7 +59,6 @@ async function getMenus(req, res, next) {
         }
 
         const menus = await userService.getMenusByRoleId(user.roleId);
-        console.log("mmenus---------",menus)
         res.json({ code: 200, data: menus });
     } catch (err) {
         next(err);
@@ -59,6 +73,7 @@ async function getMenus(req, res, next) {
 
 
 module.exports = {
+    getCurrentUser,
     getUserInfo,
     getMenus,
 }

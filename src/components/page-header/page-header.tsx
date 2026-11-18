@@ -1,10 +1,10 @@
-import React, { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Button, Layout, Breadcrumb, theme } from 'antd';
+import { Button, Breadcrumb, theme } from 'antd';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import PageHeaderWrap from './style';
 import { mapRouteToBreadCrumb } from '@/utils/mapMenusToRoutes';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
 import { changeSelectedKeysAction } from '@/store/modules/main/main';
 import { shallowEqual } from 'react-redux';
@@ -17,10 +17,9 @@ interface Iprops {
 }
 
 const PageHeader: FC<Iprops> = props => {
-    const { userMenus, selectedKeys } = useAppSelector(
+    const { userMenus } = useAppSelector(
         state => ({
-            userMenus: state.login.userMenus,
-            selectedKeys: state.main.selectedKeys
+            userMenus: state.login.userMenus
         }),
         shallowEqual
     );
@@ -29,7 +28,7 @@ const PageHeader: FC<Iprops> = props => {
     const dispatch = useAppDispatch();
 
     const {
-        token: { colorBgContainer, borderRadiusLG }
+        token: { colorBgContainer }
     } = theme.useToken();
 
     // 优化

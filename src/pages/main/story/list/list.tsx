@@ -1,11 +1,11 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import type { FC, ReactNode } from 'react';
 
 interface Iprops {
     children?: ReactNode;
 }
 
-const List: FC<Iprops> = props => {
+const List: FC<Iprops> = () => {
     return <div>List</div>;
 };
 

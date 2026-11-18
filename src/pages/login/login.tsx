@@ -1,10 +1,11 @@
-import React, { memo, useRef, useState, useEffect } from 'react';
+import { memo, useRef, useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
 import LoginWrap from './style';
 import { Tabs, Checkbox, Button, App as AntdApp } from 'antd';
 import type { TabsProps, CheckboxProps } from 'antd';
 import AccountLogin from './c-cpns/account-login';
 import PhoneLogin from './c-cpns/phone-login';
+import Register from './c-cpns/register';
 import { UserOutlined, PhoneOutlined } from '@ant-design/icons';
 import type { AccountLoginRef } from './c-cpns/account-login';
 import { useAppDispatch } from '@/hooks/hook';
@@ -15,7 +16,7 @@ interface Iprops {
     children?: ReactNode;
 }
 
-const Login: FC<Iprops> = props => {
+const Login: FC<Iprops> = () => {
     const accountLoginRef = useRef<AccountLoginRef>(null);
     // 登录按钮是否可点击
     const [isSubmitAbled, setIsSubmitAbled] = useState(false);
@@ -23,6 +24,9 @@ const Login: FC<Iprops> = props => {
     const [isPsdRemembered, setIsPswRemember] = useState(true);
 
     const [submitting, setSubmitting] = useState(false);
+    // 注册弹窗独立管理，避免将注册表单状态混入登录表单。
+    const [registerOpen, setRegisterOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('1');
     const { message } = AntdApp.useApp();
 
     const dispatch = useAppDispatch();
@@ -55,7 +59,19 @@ const Login: FC<Iprops> = props => {
     }, []);
 
     const onChange = (key: string) => {
-        console.log(key);
+        setActiveTab(key);
+    };
+
+    /**
+     * 注册成功后回到账号登录，回填用户名并清空旧密码。
+     * @param {string} username - 刚刚注册成功的用户名。
+     * @returns {void} 无返回值；注册本身不会自动登录或保存密码。
+     */
+    const handleRegistered = (username: string) => {
+        setRegisterOpen(false);
+        setActiveTab('1');
+        accountLoginRef.current?.setFormValues({ username, password: '' });
+        setIsSubmitAbled(false);
     };
 
     // 每次子组件表单变化触发，判断是否禁用按钮
@@ -114,6 +130,7 @@ const Login: FC<Iprops> = props => {
     const items: TabsProps['items'] = [
         {
             key: '1',
+            forceRender: true,
             label: '帐号登录',
             children: <AccountLogin ref={accountLoginRef} onFieldsChange={onFieldsChange} />,
             icon: <UserOutlined />
@@ -129,7 +146,7 @@ const Login: FC<Iprops> = props => {
         <LoginWrap>
             <h1>金基德</h1>
             <div className='content'>
-                <Tabs defaultActiveKey='1' items={items} type='card' onChange={onChange} />
+                <Tabs activeKey={activeTab} items={items} type='card' onChange={onChange} />
             </div>
             <div className='bottom'>
                 <div className='oper-box'>
@@ -147,7 +164,18 @@ const Login: FC<Iprops> = props => {
                 >
                     立即登录
                 </Button>
+                <div className='register-entry'>
+                    <span>还没有账号？</span>
+                    <Button type='link' disabled={submitting} onClick={() => setRegisterOpen(true)}>
+                        注册账号
+                    </Button>
+                </div>
             </div>
+            <Register
+                open={registerOpen}
+                onClose={() => setRegisterOpen(false)}
+                onSuccess={handleRegistered}
+            />
         </LoginWrap>
     );
 };

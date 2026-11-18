@@ -1,5 +1,4 @@
 import lxRequest from '../..';
-import type { Iaccount } from '@/types';
 
 // 获取页面列表
 export function getPageListData(pageName: string, queryInfo) {

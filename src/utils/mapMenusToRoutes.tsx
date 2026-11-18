@@ -28,7 +28,6 @@ export function loadLocalRoutes(): RouteObject[] {
 export function mapMeunsToRoutes(userMenus: any[]) {
     const localRoutes = loadLocalRoutes();
     const childrenRoutes: RouteObject[] = [];
-    let firstPath = '';
 
     if (userMenus.length && userMenus[0].children.length) {
         const firstChildPath = userMenus[0].children[0].url.replace('/main/', '');
@@ -108,7 +107,7 @@ export function flatterMenuMap(userMenus: any[]) {
 export function mapRouteToBreadCrumb(
     curPath: string,
     userMenus: any,
-    onCrumbItemClick: (id: any) => void
+    _onCrumbItemClick: (id: any) => void
 ) {
     const breadcrumb: Ibreadcrumb[] = [];
     for (const menu of userMenus) {

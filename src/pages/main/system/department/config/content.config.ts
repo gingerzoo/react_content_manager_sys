@@ -1,4 +1,6 @@
-const contentConfig = {
+import type { IContentConfig } from '@/types/main';
+
+const contentConfig: IContentConfig = {
     pageName: 'department',
     header: {
         title: '部门列表',

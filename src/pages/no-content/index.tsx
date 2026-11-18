@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import { memo } from 'react';
 import type { FC, ReactNode } from 'react';
 import NoContentWrap from './style';
 
@@ -6,7 +6,7 @@ interface Iprops {
     children?: ReactNode;
 }
 
-const NoContent: FC<Iprops> = props => {
+const NoContent: FC<Iprops> = () => {
 
     return (
         <NoContentWrap>

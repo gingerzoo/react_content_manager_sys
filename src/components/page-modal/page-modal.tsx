@@ -1,6 +1,6 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Button, Modal, Form, Input, Select, App as AntdApp } from 'antd';
+import { Modal, Form, Input, Select, App as AntdApp } from 'antd';
 import PageModalWrap from './style';
 import type { IModalConfig } from '@/types/index';
 import { useAppDispatch, useAppSelector } from '@/hooks/hook';
@@ -25,7 +25,7 @@ const PageModal: FC<Iprops> = props => {
     const [submitting, setSubmitting] = useState(false);
     const { message } = AntdApp.useApp();
 
-    const { rolesList, menusList, departmentList } = useAppSelector(
+    const { rolesList, departmentList } = useAppSelector(
         state => ({
             rolesList: state.main.pageRoles,
             menusList: state.main.pageMenus,
@@ -176,7 +176,7 @@ const PageModal: FC<Iprops> = props => {
                     layout='horizontal'
                     style={{ maxWidth: 500 }}
                 >
-                    {modalConfig.modalItems.map((item, idx) => {
+                    {modalConfig.modalItems.map(item => {
                         // 新建时不展示状态，由服务端使用默认值。
                         if (!isEditState && item.name === 'enable') {
                             return null;
