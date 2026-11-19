@@ -14,6 +14,7 @@ export interface OrganizationRecord {
     menuNames?: string[];
 }
 export interface MenuOption {
+    assignable?: boolean;
     id: number;
     name: string;
     parent_id: number | null;

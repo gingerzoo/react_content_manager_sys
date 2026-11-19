@@ -1,6 +1,8 @@
 export function clearLoginStorage() {
     const keys = [
         'token',
+        'password',
+        'isPsdRemembered',
         'userInfo',
         'userMenus',
         'selectedKeys'

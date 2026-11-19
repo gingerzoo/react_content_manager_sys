@@ -21,6 +21,7 @@ function requireAccess(menuUrl) {
                     return res.status(403).json({ code: 403, message: '没有访问该功能的权限' });
                 }
             }
+            req.currentUser = user;
             next();
         } catch (error) {
             next(error);

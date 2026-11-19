@@ -77,8 +77,14 @@ app.use((error, req, res, next) => {
 
 
 
-app.listen(8089, () => {
-    console.log('Server is running on port 8089');
+const port = Number(process.env.PORT ?? '8089');
+
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('PORT 必须是 1–65535 之间的整数');
+}
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
 
 process.on('unhandledRejection', (err) => {

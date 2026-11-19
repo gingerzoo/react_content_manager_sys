@@ -49,7 +49,15 @@ async function main() {
             return response.json();
         };
 
-        // 无效输入必须在写库前被拒绝。
+        delete process.env.ALLOW_PUBLIC_REGISTRATION;
+        const closed = await fetch(`${base}/api/auth/config`);
+        assert.equal((await closed.json()).data.registrationEnabled, false);
+        assert.equal((await post('register', { username, password }, 403)).code, 403);
+
+        process.env.ALLOW_PUBLIC_REGISTRATION = 'true';
+        const open = await fetch(`${base}/api/auth/config`);
+        assert.equal((await open.json()).data.registrationEnabled, true);
+        // 在显式允许注册的环境验证原有流程。
         for (const body of [
             {}, [], { username, password: '123456' },
             { username: 'a', password },

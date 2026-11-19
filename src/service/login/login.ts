@@ -1,6 +1,14 @@
 import lxRequest from '..';
 import type { Iaccount } from '@/types';
 
+export function getRegistrationConfig(signal: AbortSignal) {
+    return lxRequest.request<{ code: number; data: { registrationEnabled: boolean } }>({
+        method: 'GET',
+        url: '/auth/config',
+        signal
+    });
+}
+
 /**
  * 提交公开注册；只发送账号密码，确认密码仅用于前端一致性校验。
  * @param {Iaccount} data - 用户名与密码。

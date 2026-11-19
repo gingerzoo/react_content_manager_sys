@@ -106,13 +106,15 @@ interface DeleteConversationResponse {
  * 创建属于当前登录用户的空会话；默认标题在首次成功问答保存时由后端更新。
  *
  * @param {string} [title='新对话'] - 空会话初始标题。
+ * @param {AbortSignal} [signal] - 离开页面时取消请求。
  * @returns {Promise<CreateConversationResponse>} 包含业务状态码和新会话 ID、标题的接口响应。
  */
-export function createAgentConversation(title = '新对话') {
+export function createAgentConversation(title = '新对话', signal?: AbortSignal) {
     return lxRequest.request<CreateConversationResponse>({
         method: 'POST',
         url: '/agent/conversations',
-        data: { title }
+        data: { title },
+        signal
     });
 }
 

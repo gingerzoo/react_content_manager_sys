@@ -55,7 +55,7 @@ export default function OrganizationManagement({ kind }: { kind: OrganizationKin
     const [saving, setSaving] = useState(false);
     const savingRef = useRef(false);
     const deleteConfirmRef = useRef(false);
-    const leafMenus = data.menus.filter(menu => menu.parent_id !== null);
+    const leafMenus = data.menus.filter(menu => menu.parent_id !== null && menu.assignable !== false);
 
     const departmentTree = useMemo(() => {
         const blocked = new Set<number>();

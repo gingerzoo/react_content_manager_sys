@@ -11,6 +11,7 @@ import type { AccountLoginRef } from './c-cpns/account-login';
 import { useAppDispatch } from '@/hooks/hook';
 import { fetchLoginAction } from '@/store/modules/login';
 import { useNavigate } from 'react-router-dom';
+import { getRegistrationConfig } from '@/service/login/login';
 
 interface Iprops {
     children?: ReactNode;
@@ -20,12 +21,12 @@ const Login: FC<Iprops> = () => {
     const accountLoginRef = useRef<AccountLoginRef>(null);
     // 登录按钮是否可点击
     const [isSubmitAbled, setIsSubmitAbled] = useState(false);
-    // 是否记住密码
-    const [isPsdRemembered, setIsPswRemember] = useState(true);
+    const [rememberUsername, setRememberUsername] = useState(false);
 
     const [submitting, setSubmitting] = useState(false);
     // 注册弹窗独立管理，避免将注册表单状态混入登录表单。
     const [registerOpen, setRegisterOpen] = useState(false);
+    const [registrationEnabled, setRegistrationEnabled] = useState(false);
     const [activeTab, setActiveTab] = useState('1');
     const { message } = AntdApp.useApp();
 
@@ -33,29 +34,22 @@ const Login: FC<Iprops> = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const rememberedUsername = localStorage.getItem('username');
-        const rememberedPassword = localStorage.getItem('password');
-        const isPsdRememberedStr = localStorage.getItem('isPsdRemembered');
+        // 清理旧版曾保存的明文密码，仅允许记住用户名。
+        localStorage.removeItem('password');
+        localStorage.removeItem('isPsdRemembered');
+        const username = localStorage.getItem('username') ?? '';
+        accountLoginRef.current?.setFormValues({ username });
+        setRememberUsername(Boolean(username));
 
-        let isPsdRemembered = true; // 设定默认值为 true
-        if (isPsdRememberedStr !== null) {
-            isPsdRemembered = isPsdRememberedStr === 'true';
-        }
-
-        const defaultValues = {
-            username: rememberedUsername || ''
-        };
-
-        if (accountLoginRef.current && isPsdRemembered) {
-            defaultValues['password'] = rememberedPassword || '';
-            setIsSubmitAbled(true);
-        }
-
-        // 填充表单
-        accountLoginRef.current?.setFormValues(defaultValues);
-        console.log('useEffext里的isPsdRemembered-------', isPsdRemembered);
-
-        setIsPswRemember(isPsdRemembered);
+        const controller = new AbortController();
+        void getRegistrationConfig(controller.signal).then(result => {
+            if (!controller.signal.aborted) {
+                setRegistrationEnabled(result.code === 200 && result.data?.registrationEnabled === true);
+            }
+        }).catch(() => {
+            // 配置无法读取时，注册入口保持关闭。
+        });
+        return () => controller.abort();
     }, []);
 
     const onChange = (key: string) => {
@@ -80,9 +74,10 @@ const Login: FC<Iprops> = () => {
         setIsSubmitAbled(!!accountLoginRef.current.isValid());
     };
 
-    // 记住密码状态更改
+    // 仅保存用户名，密码交给用户或浏览器的密码管理器。
     const onCheckBoxChange: CheckboxProps['onChange'] = e => {
-        setIsPswRemember(e.target.checked);
+        setRememberUsername(e.target.checked);
+        if (!e.target.checked) localStorage.removeItem('username');
     };
 
     const handleSubmitBtnClick = async () => {
@@ -93,20 +88,10 @@ const Login: FC<Iprops> = () => {
             if (!values) return;
 
 
-            localStorage.setItem('username', values?.username || '');
             await dispatch(fetchLoginAction(values)).unwrap();
-             navigate('/main');
-
-            if (isPsdRemembered) {
-                localStorage.setItem('password', values?.password || '');
-                localStorage.setItem('isPsdRemembered', 'true');
-            } else {
-                // localStorage.removeItem('username');
-                localStorage.removeItem('password');
-                localStorage.setItem('isPsdRemembered', 'false');
-            }
-
-            // TODO: 调用接口登录
+            if (rememberUsername) localStorage.setItem('username', values.username);
+            else localStorage.removeItem('username');
+            navigate('/main');
         } catch (error: unknown) {
             // 表单校验失败时，Form.Item 已经显示具体提示。
             if (
@@ -150,8 +135,8 @@ const Login: FC<Iprops> = () => {
             </div>
             <div className='bottom'>
                 <div className='oper-box'>
-                    <Checkbox checked={isPsdRemembered} onChange={onCheckBoxChange}>
-                        记住密码
+                    <Checkbox checked={rememberUsername} onChange={onCheckBoxChange}>
+                        记住账号
                     </Checkbox>
                     <Button type='link'>忘记密码</Button>
                 </div>
@@ -164,18 +149,18 @@ const Login: FC<Iprops> = () => {
                 >
                     立即登录
                 </Button>
-                <div className='register-entry'>
+                {registrationEnabled && <div className='register-entry'>
                     <span>还没有账号？</span>
                     <Button type='link' disabled={submitting} onClick={() => setRegisterOpen(true)}>
                         注册账号
                     </Button>
-                </div>
+                </div>}
             </div>
-            <Register
+            {registrationEnabled && <Register
                 open={registerOpen}
                 onClose={() => setRegisterOpen(false)}
                 onSuccess={handleRegistered}
-            />
+            />}
         </LoginWrap>
     );
 };

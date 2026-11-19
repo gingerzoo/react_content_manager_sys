@@ -648,7 +648,7 @@ const Chat = () => {
     };
 
     /**
-     * 发送当前输入并增量显示助手回复；只有收到 done 才将问答转入正式消息列表。
+     * 发送当前输入并增量显示助手回复；没有当前会话时先创建，只有收到 done 才保存到页面消息列表。
      * 失败保留临时回复并标记未完成；不自动重试，避免重复调用付费模型或重复保存。
      *
      * 无入参；所需上下文从闭包或模块作用域读取。
@@ -660,7 +660,6 @@ const Chat = () => {
             sendingRef.current ||
             creatingRef.current ||
             deletingConversationRef.current ||
-            conversationId === null ||
             switchConversationControllerRef.current
         ) {
             return;
@@ -672,7 +671,7 @@ const Chat = () => {
             return;
         }
 
-        const currentConversationId = conversationId;
+        let currentConversationId = conversationId;
         const controller = new AbortController();
 
         streamControllerRef.current = controller;
@@ -685,6 +684,20 @@ const Chat = () => {
         setAgentProgress('正在处理问题……');
 
         try {
+            if (currentConversationId === null) {
+                const response = await createAgentConversation(undefined, controller.signal);
+                if (controller.signal.aborted) return;
+
+                const id = response.data?.id;
+                if (response.code !== 201 || id === undefined || !Number.isSafeInteger(id) || id <= 0) {
+                    throw new Error(response.message || '创建对话失败，请重试');
+                }
+
+                // 当前发送直接使用返回的 ID，React 状态会在下次渲染时更新。
+                currentConversationId = id;
+                setConversationId(id);
+            }
+
             const result = await streamAgentMessage(
                 currentConversationId,
                 content,
@@ -786,8 +799,8 @@ const Chat = () => {
         } catch (error: unknown) {
             // 离开页面主动取消时，不需要再弹错误提示。
             if (
-                error instanceof DOMException &&
-                error.name === 'AbortError'
+                controller.signal.aborted ||
+                (error instanceof DOMException && error.name === 'AbortError')
             ) {
                 return;
             }
@@ -795,7 +808,14 @@ const Chat = () => {
             let errorMessage =
                 '本次回复未完成，请刷新历史记录后检查';
 
-            if (error instanceof TypeError) {
+            if (axios.isAxiosError(error)) {
+                const serverMessage = error.response?.data?.message;
+                errorMessage = !error.response
+                    ? '无法连接服务，请检查网络'
+                    : typeof serverMessage === 'string' && serverMessage.trim()
+                        ? serverMessage
+                        : '创建对话失败，请重试';
+            } else if (error instanceof TypeError) {
                 errorMessage = '无法连接服务，请检查网络';
             } else if (
                 error instanceof Error &&
@@ -1292,7 +1312,6 @@ const Chat = () => {
                     }}
                     disabled={
                         historyStatus !== 'ready' ||
-                        conversationId === null ||
                         creating ||
                         sending ||
                         deletingConversation
@@ -1310,7 +1329,6 @@ const Chat = () => {
                         loading={sending}
                         disabled={
                             historyStatus !== 'ready' ||
-                            conversationId === null ||
                             creating ||
                             sending ||
                             deletingConversation ||

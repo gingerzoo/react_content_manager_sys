@@ -1,4 +1,5 @@
 const systemService = require('../services/system');
+const adminMenus = require('../utils/adminMenus');
 
 function isValidDateString(value) {
     if (
@@ -152,7 +153,9 @@ async function getMenuList(req, res, next) {
         res.json({
             code: 200,
             message: '获取菜单成功',
-            data: menuList
+            data: {
+                list: menuList.list.map(menu => ({ ...menu, assignable: !adminMenus.has(menu.url) }))
+            }
 
         });
     } catch (err) {

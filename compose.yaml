@@ -1,0 +1,52 @@
+services:
+  db:
+    image: public.ecr.aws/docker/library/mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请设置 MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: my_project
+      MYSQL_USER: content_app
+      MYSQL_PASSWORD: ${DB_PASSWORD:?请设置 DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./server/db/agent.sql:/docker-entrypoint-initdb.d/02-agent.sql:ro
+      - ./server/db/contents.sql:/docker-entrypoint-initdb.d/03-contents.sql:ro
+      - ./server/db/seed-contents.sql:/docker-entrypoint-initdb.d/04-seed-contents.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1
+          -u "$$MYSQL_USER" -D "$$MYSQL_DATABASE" -e 'SELECT 1' >/dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 24
+
+  api:
+    build: ./server
+    environment:
+      PORT: "8089"
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: my_project
+      DB_USER: content_app
+      DB_PASSWORD: ${DB_PASSWORD:?请设置 DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?请设置 JWT_SECRET}
+      ALLOW_PUBLIC_REGISTRATION: "${ALLOW_PUBLIC_REGISTRATION:-false}"
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18089:8089"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:18080:80"
+volumes:
+  mysql_data:

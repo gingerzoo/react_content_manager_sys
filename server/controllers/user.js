@@ -1,4 +1,5 @@
 const userService = require('../services/user');
+const adminMenus = require('../utils/adminMenus');
 
 /**
  * 根据已验证 JWT 读取本人信息，不接受客户端提供的用户 ID。
@@ -9,8 +10,7 @@ const userService = require('../services/user');
  */
 async function getCurrentUser(req, res, next) {
     try {
-        const user = await userService.getUserById(req.user.id);
-        res.json({ code: 200, message: '获取当前用户成功', data: user });
+        res.json({ code: 200, message: '获取当前用户成功', data: req.currentUser });
     } catch (error) {
         next(error);
     }
@@ -18,7 +18,12 @@ async function getCurrentUser(req, res, next) {
 async function getUserInfo(req, res, next) {
     const userId = req.params.id;
     try {
-        const result = await userService.getUserById(userId);
+        const currentUser = req.currentUser;
+        const isSelf = String(currentUser.id) === userId;
+        if (!isSelf && currentUser.roleId !== 0) {
+            return res.status(403).json({ code: 403, message: '只能查看本人的资料' });
+        }
+        const result = isSelf ? currentUser : await userService.getUserById(userId);
         if (!result) {
             return res.status(404).json({
                 code: 404,
@@ -58,7 +63,16 @@ async function getMenus(req, res, next) {
             });
         }
 
-        const menus = await userService.getMenusByRoleId(user.roleId);
+        let menus = await userService.getMenusByRoleId(user.roleId);
+        if (user.roleId !== 0) {
+            // 权限也由 API 单独校验。旧数据库中残留的授权不会重新显示这些页面。
+            menus = menus
+                .map(menu => ({
+                    ...menu,
+                    children: menu.children.filter(child => !adminMenus.has(child.url))
+                }))
+                .filter(menu => menu.children.length > 0);
+        }
         res.json({ code: 200, data: menus });
     } catch (err) {
         next(err);

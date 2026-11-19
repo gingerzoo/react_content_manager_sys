@@ -1,4 +1,5 @@
 const pool = require('../db');
+const adminMenus = require('../utils/adminMenus');
 
 /**
  * 抛出可向用户展示的业务错误。
@@ -29,13 +30,15 @@ async function findRolePage({ offset, size, name }) {
     const [counts] = await pool.execute(`SELECT COUNT(*) AS total FROM roles r ${where}`, params);
     if (list.length) {
         const [menus] = await pool.execute(
-            `SELECT rm.role_id, m.id, m.name, m.parent_id FROM role_menus rm
+            `SELECT rm.role_id, m.id, m.name, m.parent_id, m.url FROM role_menus rm
              JOIN menus m ON m.id = rm.menu_id
              WHERE rm.role_id IN (${list.map(() => '?').join(',')}) ORDER BY m.id`,
             list.map(role => role.id)
         );
         for (const role of list) {
-            const assigned = menus.filter(menu => menu.role_id === role.id);
+            const assigned = menus.filter(menu =>
+                menu.role_id === role.id && (role.id === 0 || !adminMenus.has(menu.url))
+            );
             role.menuIds = assigned.map(menu => menu.id);
             role.menuNames = assigned.filter(menu => menu.parent_id !== null).map(menu => menu.name);
         }
@@ -127,13 +130,14 @@ async function mutateRole(action, id, data) {
             await connection.execute('DELETE FROM roles WHERE id = ?', [id]);
         } else {
             if (roles.some(role => role.id !== id && role.name === data.name)) fail(409, '角色名称已存在');
-            const [menus] = await connection.execute('SELECT id, parent_id FROM menus');
+            const [menus] = await connection.execute('SELECT id, parent_id, url FROM menus');
             const menuIds = new Set();
             for (const selectedId of data.menuIds) {
                 let cursor = selectedId;
                 while (cursor !== null && !menuIds.has(cursor)) {
                     const menu = menus.find(item => item.id === cursor);
                     if (!menu) fail(400, '选择的菜单不存在，请刷新后重试');
+                    if (adminMenus.has(menu.url)) fail(403, '用户管理和内容助手仅对管理员开放');
                     menuIds.add(cursor);
                     cursor = menu.parent_id;
                 }

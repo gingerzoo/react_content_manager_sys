@@ -5,7 +5,7 @@ const requireAccess = require('../middleware/requireAccess');
 const systemController = require('../controllers/system');
 const organizationController = require('../controllers/organization');
 
-router.post('/users/list', authMiddleware, requireAccess('/main/system/user'), systemController.getUsersList);
+router.post('/users/list', authMiddleware, requireAdmin, systemController.getUsersList);
 
 router.post('/role/list', authMiddleware, requireAccess(), systemController.getRoleList);
 router.post('/department/list', authMiddleware, requireAccess(), systemController.getDepartmentList);

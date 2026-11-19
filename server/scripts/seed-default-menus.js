@@ -1,6 +1,7 @@
 const path = require('node:path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env'), quiet: true });
 const pool = require('../db');
+const adminMenus = require('../utils/adminMenus');
 
 /**
  * 幂等补齐四个菜单，并给管理员、默认查看者分配菜单；不改变已有用户角色。
@@ -30,7 +31,8 @@ async function seed() {
                     [id, name, url, parentUrl ? ids.get(parentUrl) : null]);
                 ids.set(url, id);
             }
-            for (const roleId of [0, 2]) {
+            const roleIds = adminMenus.has(url) || url === '/main/story' ? [0] : [0, 2];
+            for (const roleId of roleIds) {
                 await connection.execute(
                     'INSERT IGNORE INTO role_menus (role_id, menu_id) VALUES (?, ?)',
                     [roleId, ids.get(url)]
