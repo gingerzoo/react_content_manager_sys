@@ -6,6 +6,9 @@ services:
       MYSQL_DATABASE: my_project
       MYSQL_USER: content_app
       MYSQL_PASSWORD: ${DB_PASSWORD:?请设置 DB_PASSWORD}
+    ports:
+      - "127.0.0.1:13306:3306"
+    
     volumes:
       - mysql_data:/var/lib/mysql
       - ./server/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -34,11 +37,41 @@ services:
       JWT_SECRET: ${JWT_SECRET:?请设置 JWT_SECRET}
       ALLOW_PUBLIC_REGISTRATION: "${ALLOW_PUBLIC_REGISTRATION:-false}"
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      CONTENT_SERVICE_URL: http://content-service:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      content-service:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18089:8089"
+
+  content-service:
+    build: ./content-service
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: my_project
+      DB_USER: content_app
+      DB_PASSWORD: ${DB_PASSWORD:?请设置 DB_PASSWORD}
+      DB_POOL_SIZE: "5"
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "127.0.0.1:18089:8089"
+      - "127.0.0.1:18000:8000"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          python -c "import urllib.request;
+          urllib.request.urlopen(
+          'http://127.0.0.1:8000/health',
+          timeout=2)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
 
   web:
     build:

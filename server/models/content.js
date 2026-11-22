@@ -1,39 +1,62 @@
-const pool = require('../db');
+const CONTENT_SERVICE_URL = (
+    process.env.CONTENT_SERVICE_URL ||
+    'http://127.0.0.1:8000'
+).replace(/\/+$/, '');
 
 /**
- * 在已发布文章的标题和摘要中搜索关键词。
- * 查询最多 6 条，返回前 5 条，额外一条用于判断是否还有结果。
+ * 在内容服务中搜索已发布文章。
  *
  * @param {string} keyword - 已校验并去除首尾空白的关键词。
  * @returns {Promise<{
- *   items: Array<{id: number, title: string, summary: string}>,
+ *   items: Array<{
+ *     id: number,
+ *     title: string,
+ *     summary: string
+ *   }>,
  *   hasMore: boolean
- * }>} 文章摘要列表及是否存在更多结果；不返回正文。
- * @throws {Error} 数据库查询失败时向调用方传播。
+ * }>} 最多五篇文章摘要及是否还有更多结果。
+ * @throws {Error} 内容服务请求失败或返回格式错误时抛出。
  */
 async function searchPublishedContents(keyword) {
-    const [rows] = await pool.execute(
-        `SELECT id, title, summary
-         FROM contents
-         WHERE status = 'published'
-           AND (
-               LOCATE(?, title) > 0
-               OR LOCATE(?, summary) > 0
-           )
-         ORDER BY id DESC
-         LIMIT 6`,
-        [keyword, keyword]
+    const searchParams = new URLSearchParams({
+        keyword,
+        limit: '6'
+    });
+
+    const response = await fetch(
+        `${CONTENT_SERVICE_URL}/articles?${searchParams}`,
+        {
+            signal: AbortSignal.timeout(5000)
+        }
     );
 
+    if (!response.ok) {
+        throw new Error(
+            `内容服务搜索失败：HTTP ${response.status}`
+        );
+    }
+
+    const result = await response.json();
+
+    if (
+        typeof result !== 'object' ||
+        result === null ||
+        !Array.isArray(result.list) ||
+        !Number.isSafeInteger(result.total)
+    ) {
+        throw new Error(
+            '内容服务搜索结果格式不正确'
+        );
+    }
+
     return {
-        items: rows.slice(0, 5),
-        hasMore: rows.length > 5
+        items: result.list.slice(0, 5),
+        hasMore: result.total > 5
     };
 }
 
 /**
- * 根据 ID 查询一篇已发布文章。
- * 正文最多读取 12001 个字符，多读一个用于判断是否需要截断。
+ * 通过内容服务读取一篇已发布文章。
  *
  * @param {number} id - 已校验的文章数据库 ID。
  * @returns {Promise<{
@@ -41,24 +64,43 @@ async function searchPublishedContents(keyword) {
  *   title: string,
  *   summary: string,
  *   body: string
- * } | null>} 文章数据；不存在或未发布时返回 null。
- * @throws {Error} 数据库查询失败时向上传播。
+ * } | null>} 文章内容；不存在、未发布或已删除时返回 null。
+ * @throws {Error} 内容服务请求失败或返回格式错误时抛出。
  */
 async function findPublishedContentById(id) {
-    const [rows] = await pool.execute(
-        `SELECT
-            id,
-            title,
-            summary,
-            LEFT(body, 12001) AS body
-         FROM contents
-         WHERE id = ?
-           AND status = 'published'
-         LIMIT 1`,
-        [id]
+    const response = await fetch(
+        `${CONTENT_SERVICE_URL}/articles/${id}`,
+        {
+            signal: AbortSignal.timeout(5000)
+        }
     );
 
-    return rows[0] || null;
+    if (response.status === 404) {
+        return null;
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            `内容服务详情请求失败：HTTP ${response.status}`
+        );
+    }
+
+    const article = await response.json();
+
+    if (
+        typeof article !== 'object' ||
+        article === null ||
+        !Number.isSafeInteger(article.id) ||
+        typeof article.title !== 'string' ||
+        typeof article.summary !== 'string' ||
+        typeof article.body !== 'string'
+    ) {
+        throw new Error(
+            '内容服务详情返回格式不正确'
+        );
+    }
+
+    return article;
 }
 
 module.exports = {

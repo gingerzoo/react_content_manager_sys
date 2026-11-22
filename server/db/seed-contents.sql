@@ -1,4 +1,5 @@
 USE my_project;
+SET NAMES utf8mb4;
 
 INSERT INTO contents (
     title,

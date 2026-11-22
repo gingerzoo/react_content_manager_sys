@@ -25,3 +25,9 @@ dist-ssr
 server/.env
 server/.env.*
 !server/.env.example
+
+# Python
+content-service/.venv/
+content-service/.env
+**/__pycache__/
+*.py[cod]
