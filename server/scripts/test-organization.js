@@ -71,10 +71,10 @@ async function main() {
 
         const menus = (await request('GET', '/user/me/menus', viewer)).data;
         const leaves = menus.flatMap(menu => menu.children ?? []);
-        for (const url of ['/main/system/department', '/main/system/role']) {
+        for (const url of ['/main/system/department', '/main/system/role', '/main/story/chat']) {
             assert(leaves.some(menu => menu.url === url), `查看者缺少菜单 ${url}`);
         }
-        assert(!leaves.some(menu => ['/main/system/user', '/main/story/chat'].includes(menu.url)));
+        assert(!leaves.some(menu => menu.url === '/main/system/user'));
         assert.equal((await request('GET', '/user/me', viewer)).data.roleId, 2);
         assert.equal((await request('GET', `/user/${users[1]}`, viewer)).data.id, users[1]);
         await request('GET', `/user/${users[0]}`, viewer, undefined, 403);
@@ -118,15 +118,17 @@ async function main() {
         await request('DELETE', `/departments/${parent}`, admin, undefined, 409);
 
         const adminMenus = (await request('GET', '/user/me/menus', admin)).data.flatMap(menu => menu.children);
-        const chatMenu = adminMenus.find(menu => menu.url === '/main/story/chat').id;
+        const userMenu = adminMenus.find(menu => menu.url === '/main/system/user').id;
         const departmentMenu = leaves.find(menu => menu.url === '/main/system/department').id;
         const roleMenu = leaves.find(menu => menu.url === '/main/system/role').id;
-        await request('POST', '/roles', admin, { name: `${prefix}_protected`, menuIds: [chatMenu] }, 403);
+        await request('POST', '/roles', admin, { name: `${prefix}_protected`, menuIds: [userMenu] }, 403);
         const role = (await request('POST', '/roles', admin, { name: `${prefix}_role`, menuIds: [departmentMenu] })).data.id;
         roleIds.push(role);
         await pool.execute('UPDATE users SET role_id = ? WHERE id = ?', [role, users[2]]);
         await request('POST', '/users/list', other, {}, 403);
         const assigned = (await request('GET', '/user/me/menus', other)).data;
+        assert(assigned.some(menu => menu.children.some(item => item.url === '/main/story/chat')));
+        await request('GET', '/agent/conversations', other);
         assert(assigned.some(menu => menu.children.some(item => item.id === departmentMenu)));
         await request('POST', '/roles/list', other, {}, 403);
         await request('PATCH', `/roles/${role}`, admin, { name: `${prefix}_renamed`, menuIds: [departmentMenu, roleMenu] });
@@ -141,14 +143,17 @@ async function main() {
         await pool.execute('UPDATE users SET role_id = 2 WHERE id = ?', [users[2]]);
         await request('DELETE', `/roles/${role}`, admin);
 
-        // 查看者无法直接访问普通或流式接口，管理员仍可操作自己的会话。
-        await request('POST', '/agent/conversations', viewer, { title: prefix }, 403);
+        // 查看者可以使用助手；不同账号之间的会话互不可见。
+        await request('GET', '/agent/conversations', null, undefined, 401);
+        const own = (await request('POST', '/agent/conversations', viewer, { title: prefix }, 201)).data.id;
+        await request('GET', `/agent/conversations/${own}/messages`, viewer);
+        await request('DELETE', `/agent/conversations/${own}`, viewer);
         const conversation = (await request('POST', '/agent/conversations', admin, { title: prefix }, 201)).data.id;
         await request('GET', `/agent/conversations/${conversation}/messages`, admin);
-        await request('GET', `/agent/conversations/${conversation}/messages`, viewer, undefined, 403);
-        await request('POST', `/agent/conversations/${conversation}/messages`, viewer, { content: '权限校验' }, 403);
-        await request('POST', `/agent/conversations/${conversation}/messages/stream`, viewer, { content: '权限校验' }, 403);
-        await request('DELETE', `/agent/conversations/${conversation}`, viewer, undefined, 403);
+        await request('GET', `/agent/conversations/${conversation}/messages`, viewer, undefined, 404);
+        await request('POST', `/agent/conversations/${conversation}/messages`, viewer, { content: '权限校验' }, 404);
+        await request('POST', `/agent/conversations/${conversation}/messages/stream`, viewer, { content: '权限校验' }, 404);
+        await request('DELETE', `/agent/conversations/${conversation}`, viewer, undefined, 404);
         await request('DELETE', `/agent/conversations/${conversation}`, admin);
 
         await pool.execute('UPDATE users SET department_id = ? WHERE id = ?', [grandchild, users[1]]);

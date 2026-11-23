@@ -1,4 +1,5 @@
 const pool = require('../db');
+const effectiveRoleMenus = require('./effectiveRoleMenus');
 
 async function findUserById(id) {
     const [rows] = await pool.execute(
@@ -18,7 +19,7 @@ async function findUserById(id) {
 
 async function findMenusByRoleId(roleId) {
     const [rows] = await pool.execute(
-        'SELECT m.id, m.name, m.url, m.parent_id FROM menus m JOIN role_menus rm ON m.id = rm.menu_id WHERE rm.role_id = ? ORDER BY m.id',
+        `SELECT m.id, m.name, m.url, m.parent_id FROM menus m JOIN ${effectiveRoleMenus} rm ON m.id = rm.menu_id WHERE rm.role_id = ? ORDER BY m.id`,
         [roleId]
     );
     return rows;

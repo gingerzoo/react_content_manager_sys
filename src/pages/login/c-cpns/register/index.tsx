@@ -92,7 +92,7 @@ export default function Register({ open, onClose, onSuccess }: RegisterProps) {
             footer={null}
         >
             <RegisterWrap>
-                <Alert type='info' showIcon message='新账号默认可使用内容助手，并只读查看、筛选用户、部门和角色。' />
+                <Alert type='info' showIcon message='新账号默认可使用内容助手，并只读查看、筛选部门和角色。' />
                 <Form
                     form={form}
                     layout='vertical'

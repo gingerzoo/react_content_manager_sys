@@ -1,4 +1,5 @@
 const pool = require('../db');
+const effectiveRoleMenus = require('./effectiveRoleMenus');
 const adminMenus = require('../utils/adminMenus');
 
 /**
@@ -30,7 +31,7 @@ async function findRolePage({ offset, size, name }) {
     const [counts] = await pool.execute(`SELECT COUNT(*) AS total FROM roles r ${where}`, params);
     if (list.length) {
         const [menus] = await pool.execute(
-            `SELECT rm.role_id, m.id, m.name, m.parent_id, m.url FROM role_menus rm
+            `SELECT rm.role_id, m.id, m.name, m.parent_id, m.url FROM ${effectiveRoleMenus} rm
              JOIN menus m ON m.id = rm.menu_id
              WHERE rm.role_id IN (${list.map(() => '?').join(',')}) ORDER BY m.id`,
             list.map(role => role.id)
@@ -137,7 +138,7 @@ async function mutateRole(action, id, data) {
                 while (cursor !== null && !menuIds.has(cursor)) {
                     const menu = menus.find(item => item.id === cursor);
                     if (!menu) fail(400, '选择的菜单不存在，请刷新后重试');
-                    if (adminMenus.has(menu.url)) fail(403, '用户管理和内容助手仅对管理员开放');
+                    if (adminMenus.has(menu.url)) fail(403, '用户管理仅对管理员开放');
                     menuIds.add(cursor);
                     cursor = menu.parent_id;
                 }

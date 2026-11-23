@@ -154,7 +154,7 @@ async function getMenuList(req, res, next) {
             code: 200,
             message: '获取菜单成功',
             data: {
-                list: menuList.list.map(menu => ({ ...menu, assignable: !adminMenus.has(menu.url) }))
+                list: menuList.list.map(menu => ({ ...menu, assignable: !adminMenus.has(menu.url) && menu.url !== '/main/story/chat' }))
             }
 
         });

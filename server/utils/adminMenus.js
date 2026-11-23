@@ -1,1 +1,1 @@
-module.exports = new Set(['/main/system/user', '/main/story/chat']);
+module.exports = new Set(['/main/system/user']);
